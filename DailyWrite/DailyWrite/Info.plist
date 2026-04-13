@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.googleusercontent.apps.594790430130-90seiqb3gcd4q3kd3usplteuvfektarb</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.594790430130-90seiqb3gcd4q3kd3usplteuvfektarb</string>
+			</array>
+		</dict>
+	</array>
+	<key>GIDClientID</key>
+	<string>594790430130-90seiqb3gcd4q3kd3usplteuvfektarb.apps.googleusercontent.com</string>
+	
+	<!-- App Tracking Transparency -->
+	<key>NSUserTrackingUsageDescription</key>
+	<string>Your data is used to deliver personalized content and improve app performance.</string>
+	
+	<!-- Privacy - Camera Usage Description (if adding photo features later) -->
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to capture photos for your writing.</string>
+	
+	<!-- Privacy - Photo Library Usage Description -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs photo library access to add images to your writing.</string>
+	
+	<!-- iCloud -->
+	<key>NSUbiquityContainerName</key>
+	<string>iCloud.com.jiyun.dailywrite</string>
+	
+	<!-- Required device capabilities -->
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>armv7</string>
+		<string>arm64</string>
+	</array>
+	
+	<!-- Supported interface orientations -->
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+	</array>
+	
+	<!-- App Transport Security -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+	</dict>
+</dict>
+</plist>

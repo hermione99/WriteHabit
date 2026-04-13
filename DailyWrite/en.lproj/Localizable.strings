@@ -1,0 +1,354 @@
+/* English translations - DailyWrite App */
+
+/* General */
+"Done" = "Done";
+"Cancel" = "Cancel";
+"Save" = "Save";
+"Delete" = "Delete";
+"Edit" = "Edit";
+"Close" = "Close";
+"Back" = "Back";
+"Drafts" = "Drafts";
+"Next" = "Next";
+"Continue" = "Continue";
+"Loading" = "Loading...";
+"Error" = "Error";
+"Success" = "Success";
+"OK" = "OK";
+"Yes" = "Yes";
+"No" = "No";
+
+/* Tab Navigation */
+"Feed" = "Feed";
+"Profile" = "Profile";
+"Write" = "Write";
+"Settings" = "Settings";
+
+/* Authentication */
+"Sign In" = "Sign In";
+"Sign Up" = "Sign Up";
+"Sign Out" = "Sign Out";
+"Sign Out?" = "Sign Out?";
+"Create Account" = "Create Account";
+"Email" = "Email";
+"Password" = "Password";
+"Already have an account? Sign In" = "Already have an account? Sign In";
+"Don't have an account? Sign Up" = "Don't have an account? Sign Up";
+"Write daily. Share stories." = "Write daily. Share stories.";
+
+/* Daily Prompt */
+"Today's Keyword" = "Today's Keyword";
+"Start Writing" = "Start Writing";
+"Day Streak" = "Day Streak";
+"Words Written" = "Words Written";
+"Published" = "Published";
+"words" = "characters";
+
+/* Writing Editor */
+"Prompt: %@" = "Prompt: %@";
+"Title (optional)" = "Title (optional)";
+"Start writing about '%@'..." = "Start writing about '%@'...";;
+"Make public" = "Make public";
+"Save Draft" = "Save Draft";
+"Publish" = "Publish";
+"Publish Essay?" = "Publish Essay?";
+"Your essay will be visible to others in the feed." = "Your essay will be visible to others in the feed.";
+"Your essay will be saved privately." = "Your essay will be saved privately.";
+
+/* Feed */
+"Following" = "Following";
+"Discover" = "Discover";
+"Trending" = "Trending";
+"Recent" = "Recent";
+"Comments" = "Comments";
+"Add a comment..." = "Add a comment...";
+"Post" = "Post";
+"Likes" = "Likes";
+"Like" = "Like";
+"Unlike" = "Unlike";
+
+/* Profile */
+"Your Essays" = "Your Essays";
+"See All" = "See All";
+"Essays" = "Essays";
+"Followers" = "Followers";
+"Following" = "Following";
+"Edit Profile" = "Edit Profile";
+"Anonymous" = "Anonymous";
+"Untitled" = "Untitled";
+"Writer" = "Writer";
+"Filter" = "Filter";
+"Prompt" = "Prompt";
+"Daily writer exploring thoughts one prompt at a time." = "Daily writer exploring thoughts one prompt at a time.";
+
+/* Profile Editing */
+"Profile Info" = "Profile Info";
+"Display Name" = "Display Name";
+"Bio" = "Bio";
+"Username" = "Username";
+"Save Changes" = "Save Changes";
+"Save Changes?" = "Save Changes?";
+"Enter display name" = "Enter display name";
+"Enter bio" = "Enter bio";
+"Tell us about yourself" = "Tell us about yourself";
+"Profile updated" = "Profile updated";
+"Failed to update profile" = "Failed to update profile";
+
+/* All Essays */
+"All Essays" = "All Essays";
+"No essays yet" = "No essays yet";
+"Start writing to see your essays here" = "Start writing to see your essays here";
+"Essay" = "Essay";
+
+/* Archive */
+"Writing Archive" = "Writing Archive";
+"No essays on this day" = "No essays on this day";
+"Write now" = "Write now";
+"Title" = "Title";
+"Content" = "Content";
+
+/* Analytics */
+"Writing Analytics" = "Writing Analytics";
+"Time Range" = "Time Range";
+"Week" = "Week";
+"Month" = "Month";
+"Year" = "Year";
+"All Time" = "All Time";
+"Total Words" = "Total Words";
+"Essays Written" = "Essays Written";
+"Avg Words/Essay" = "Avg Words/Essay";
+"Writing Activity" = "Writing Activity";
+"Weekly Pattern" = "Weekly Pattern";
+"Best Writing Day" = "Best Writing Day";
+"You write most on" = "You write most on";
+"Day Streak" = "Day Streak";
+"Size" = "Size";
+"Format" = "Format";
+
+/* Challenges */
+"Challenges" = "Challenges";
+"Completed" = "Completed";
+"First Steps" = "First Steps";
+"Write your first essay" = "Write your first essay";
+"On a Roll" = "On a Roll";
+"Write for 3 days in a row" = "Write for 3 days in a row";
+"Week Warrior" = "Week Warrior";
+"Write for 7 days in a row" = "Write for 7 days in a row";
+"Month Master" = "Month Master";
+"Write for 30 days in a row" = "Write for 30 days in a row";
+"Word Builder" = "Word Builder";
+"Write 1,000 words total" = "Write 1,000 words total";
+"Word Smith" = "Word Smith";
+"Write 10,000 words total" = "Write 10,000 words total";
+"Word Master" = "Word Master";
+"Write 50,000 words total" = "Write 50,000 words total";
+"Prolific Writer" = "Prolific Writer";
+"Write 10 essays" = "Write 10 essays";
+"Essay Machine" = "Essay Machine";
+"Write 50 essays" = "Write 50 essays";
+"Going Public" = "Going Public";
+"Publish your first public essay" = "Publish your first public essay";
+"Community Contributor" = "Community Contributor";
+"Publish 10 public essays" = "Publish 10 public essays";
+"Early Bird" = "Early Bird";
+"Write before 9 AM" = "Write before 9 AM";
+"Night Owl" = "Night Owl";
+"Write after 10 PM" = "Write after 10 PM";
+"Start your first challenge!" = "Start your first challenge!";
+"Amazing! You've completed all challenges!" = "Amazing! You've completed all challenges!";
+"more to go!" = "more to go!";
+"Done!" = "Done!";
+"Challenge Complete!" = "Challenge Complete!";
+"Awesome!" = "Awesome!";
+"Headings" = "Headings";
+"Formatting" = "Formatting";
+"Font" = "Font";
+
+"Today's Prompt" = "Today's Prompt";
+
+/* Book Export */
+"Create Book" = "Create Book";
+"Book Title" = "Book Title";
+"Export Format" = "Export Format";
+"Select Essays" = "Select Essays";
+"Deselect All" = "Deselect All";
+"Select All" = "Select All";
+"PDF" = "PDF";
+"EPUB" = "EPUB";
+"Create PDF Book" = "Create PDF Book";
+"Create EPUB Book" = "Create EPUB Book";
+"essays" = "essays";
+"Table of Contents" = "Table of Contents";
+"Close" = "Close";
+"My Writing Collection" = "My Writing Collection";
+
+/* Theme */
+"Theme" = "Theme";
+"Light" = "Light";
+"Dark" = "Dark";
+"System" = "System";
+"Choose your preferred appearance. The paper texture will adapt to match light or dark mode." = "Choose your preferred appearance. The paper texture will adapt to match light or dark mode.";
+
+/* Editor Style */
+"Editor Style" = "Editor Style";
+"Full Editor" = "Full Editor";
+"Simple Editor" = "Simple Editor";
+"All formatting tools visible" = "All formatting tools visible";
+"Clean paper-like interface" = "Clean paper-like interface";
+"Choose your preferred writing interface. The simple editor offers a clean, paper-like experience with minimal distractions." = "Choose your preferred writing interface. The simple editor offers a clean, paper-like experience with minimal distractions.";
+
+/* Settings */
+"Appearance" = "Appearance";
+"Font" = "Font";
+"Font Size" = "Font Size";
+"Preview" = "Preview";
+"Language" = "Language";
+"About" = "About";
+"Version" = "Version";
+
+/* Font Picker */
+"Choose Font" = "Choose Font";
+"English Fonts" = "English Fonts";
+"Korean Fonts" = "Korean Fonts";
+
+/* Language Selector */
+"Select Language" = "Select Language";
+"Choose your preferred language" = "Choose your preferred language";
+"You can change this later in settings" = "You can change this later in settings";
+
+/* Username Setup */
+"Choose Your Writing Name" = "Choose Your Writing Name";
+"This will be your unique identity on DailyWrite" = "This will be your unique identity on DailyWrite";
+"Your Name" = "Your Name";
+"username" = "username";
+"3-20 characters" = "3-20 characters";
+"Letters, numbers, underscores only" = "Letters, numbers, underscores only";
+"is available!" = "is available!";
+"is already taken. Try another." = "is already taken. Try another.";
+"Unable to check availability. Please try again." = "Unable to check availability. Please try again.";
+"Check Availability" = "Check Availability";
+"Failed to create profile. Please try again." = "Failed to create profile. Please try again.";
+
+/* Grammar & Spell Check */
+"Check Spelling" = "Check Spelling";
+"No spelling issues found!" = "No spelling issues found!";
+"No suggestions" = "No suggestions";
+"Found %@ issues" = "Found %@ issues";
+"Spelling Check" = "Spelling Check";
+
+/* AI Keywords */
+"AI Keywords" = "AI Keywords";
+"Generate New Keywords" = "Generate New Keywords";
+"Generating..." = "Generating...";
+"Keywords refreshed!" = "Keywords refreshed!";
+
+/* Notifications */
+"Notifications" = "Notifications";
+"Daily Reminder" = "Daily Reminder";
+"Enable Daily Reminder" = "Enable Daily Reminder";
+"Receive a daily notification to remind you to write." = "Receive a daily notification to remind you to write.";
+"Reminder Time" = "Reminder Time";
+"Time" = "Time";
+"Send Test Notification" = "Send Test Notification";
+"Open Settings to Enable Notifications" = "Open Settings to Enable Notifications";
+"Permission Required" = "Permission Required";
+"Please enable notifications in Settings to receive daily reminders." = "Please enable notifications in Settings to receive daily reminders.";
+"On" = "On";
+"Off" = "Off";
+
+/* Headings */
+"Heading" = "Heading";
+"Subheading" = "Subheading";
+"Sub-subheading" = "Sub-subheading";
+"Body" = "Body";
+
+/* Backup */
+"Backup" = "Backup";
+"Please sign in first" = "Please sign in first";
+"iCloud not available. Please check Settings > iCloud." = "iCloud not available. Please check Settings > iCloud.";
+"Successfully backed up %@ essays to iCloud!" = "Successfully backed up %@ essays to iCloud!";
+"Backup failed: %@" = "Backup failed: %@";
+"Export Format" = "Export Format";
+"Export %@ Essays" = "Export %@ Essays";
+"JSON (Structured Data)" = "JSON (Structured Data)";
+"Markdown (Readable)" = "Markdown (Readable)";
+"Plain Text" = "Plain Text";
+"Export your essays as a file you can save to Files, iCloud Drive, Google Drive, or share with others." = "Export your essays as a file you can save to Files, iCloud Drive, Google Drive, or share with others.";
+
+/* Settings Sections */
+"Backup & Export" = "Backup & Export";
+"Backup to iCloud" = "Backup to iCloud";
+"Export Essays" = "Export Essays";
+
+/* Drafts */
+"No Drafts" = "No Drafts";
+"Start writing to save drafts" = "Start writing to save drafts";
+"Edit Draft" = "Edit Draft";
+"Save Changes" = "Save Changes";
+"Keyword" = "Keyword";
+"Draft" = "Draft";
+
+/* Font Picker */
+"Preview" = "Preview";
+"Font Size" = "Font Size";
+"Fonts" = "Fonts";
+"Choose Font" = "Choose Font";
+
+/* Monthly Streak */
+"Last 30 Days" = "Last 30 Days";
+"Written" = "Written";
+"Missed" = "Missed";
+"Edit" = "Edit";
+"Edit Essay" = "Edit Essay";
+"Enter title" = "Enter title";
+"Content" = "Content";
+"Follow" = "Follow";
+"Following" = "Following";
+"Links" = "Links";
+"Blog URL" = "Blog URL";
+"Brunch URL" = "Brunch URL";
+"Instagram" = "Instagram";
+"Twitter/X" = "Twitter/X";
+"Threads" = "Threads";
+
+/* Account */
+"Account" = "Account";
+"Delete Account" = "Delete Account";
+"Delete Account?" = "Delete Account?";
+"Delete" = "Delete";
+"This will permanently delete your account and all your data. This action cannot be undone." = "This will permanently delete your account and all your data. This action cannot be undone.";
+"Account deleted successfully" = "Account deleted successfully";
+"Failed to delete account: %@" = "Failed to delete account: %@";
+
+/* Friends */
+"Friends" = "Friends";
+"My Friends" = "My Friends";
+"Friend Requests" = "Friend Requests";
+"Add Friend" = "Add Friend";
+"Send Friend Request" = "Send Friend Request";
+"Request Sent" = "Request Sent";
+"Already Friends" = "Already Friends";
+"Enter username" = "Enter username";
+"Search Result" = "Search Result";
+"Search" = "Search";
+"wants to be friends" = "wants to be friends";
+"No Friends Yet" = "No Friends Yet";
+"Add friends to share your essays privately" = "Add friends to share your essays privately";
+"Share Essay" = "Share Essay";
+"Select Friends" = "Select Friends";
+"Share with %d Friends" = "Share with %d Friends";
+"Shared!" = "Shared!";
+"Successfully shared with %d friends!" = "Successfully shared with %d friends!";
+"No friends yet. Add friends to share your writing!" = "No friends yet. Add friends to share your writing!";
+"User not found" = "User not found";
+"%d friends" = "%d friends";
+
+/* Visibility */
+"Private" = "Private";
+"Friends Only" = "Friends Only";
+"Public" = "Public";
+"Only you can see this" = "Only you can see this";
+"Only your friends can see this" = "Only your friends can see this";
+"Everyone can see this" = "Everyone can see this";
+"Visibility" = "Visibility";
+"Select Visibility" = "Select Visibility";

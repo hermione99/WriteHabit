@@ -1,0 +1,207 @@
+/* English translations - DailyWrite App */
+
+/* General */
+"Done" = "Done";
+"Cancel" = "Cancel";
+"Save" = "Save";
+"Delete" = "Delete";
+"Edit" = "Edit";
+"Close" = "Close";
+"Back" = "Back";
+"Drafts" = "Drafts";
+"Next" = "Next";
+"Continue" = "Continue";
+"Loading" = "Loading...";
+"Error" = "Error";
+"Success" = "Success";
+"OK" = "OK";
+"Yes" = "Yes";
+"No" = "No";
+
+/* Tab Navigation */
+"Feed" = "Feed";
+"Profile" = "Profile";
+"Write" = "Write";
+"Settings" = "Settings";
+
+/* Authentication */
+"Sign In" = "Sign In";
+"Sign Up" = "Sign Up";
+"Sign Out" = "Sign Out";
+"Sign Out?" = "Sign Out?";
+"Create Account" = "Create Account";
+"Email" = "Email";
+"Password" = "Password";
+"Already have an account? Sign In" = "Already have an account? Sign In";
+"Don't have an account? Sign Up" = "Don't have an account? Sign Up";
+"Write daily. Share stories." = "Write daily. Share stories.";
+
+/* Daily Prompt */
+"Today's Keyword" = "Today's Keyword";
+"Start Writing" = "Start Writing";
+"Day Streak" = "Day Streak";
+"Words Written" = "Words Written";
+"Published" = "Published";
+"words" = "characters";
+
+/* Writing Editor */
+"Prompt: %@" = "Prompt: %@";
+"Title (optional)" = "Title (optional)";
+"Start writing about '%@'..." = "Start writing about '%@'...";;
+"Make public" = "Make public";
+"Save Draft" = "Save Draft";
+"Publish" = "Publish";
+"Publish Essay?" = "Publish Essay?";
+"Your essay will be visible to others in the feed." = "Your essay will be visible to others in the feed.";
+"Your essay will be saved privately." = "Your essay will be saved privately.";
+
+/* Feed */
+"Following" = "Following";
+"Discover" = "Discover";
+"Trending" = "Trending";
+"Comments" = "Comments";
+"Add a comment..." = "Add a comment...";
+"Post" = "Post";
+"Likes" = "Likes";
+"Like" = "Like";
+"Unlike" = "Unlike";
+
+/* Profile */
+"Your Essays" = "Your Essays";
+"See All" = "See All";
+"Essays" = "Essays";
+"Followers" = "Followers";
+"Following" = "Following";
+"Edit Profile" = "Edit Profile";
+"Anonymous" = "Anonymous";
+"Untitled" = "Untitled";
+"Writer" = "Writer";
+"Filter" = "Filter";
+"Prompt" = "Prompt";
+"Daily writer exploring thoughts one prompt at a time." = "Daily writer exploring thoughts one prompt at a time.";
+
+/* Profile Editing */
+"Profile Info" = "Profile Info";
+"Display Name" = "Display Name";
+"Bio" = "Bio";
+"Username" = "Username";
+"Save Changes" = "Save Changes";
+"Save Changes?" = "Save Changes?";
+"Enter display name" = "Enter display name";
+"Enter bio" = "Enter bio";
+"Tell us about yourself" = "Tell us about yourself";
+"Profile updated" = "Profile updated";
+"Failed to update profile" = "Failed to update profile";
+
+/* All Essays */
+"All Essays" = "All Essays";
+"No essays yet" = "No essays yet";
+"Start writing to see your essays here" = "Start writing to see your essays here";
+"Essay" = "Essay";
+
+/* Archive */
+"Writing Archive" = "Writing Archive";
+"No essays on this day" = "No essays on this day";
+"Write now" = "Write now";
+
+/* Settings */
+"Appearance" = "Appearance";
+"Font" = "Font";
+"Font Size" = "Font Size";
+"Preview" = "Preview";
+"Language" = "Language";
+"About" = "About";
+"Version" = "Version";
+
+/* Font Picker */
+"Choose Font" = "Choose Font";
+"English Fonts" = "English Fonts";
+"Korean Fonts" = "Korean Fonts";
+
+/* Language Selector */
+"Select Language" = "Select Language";
+"Choose your preferred language" = "Choose your preferred language";
+"You can change this later in settings" = "You can change this later in settings";
+
+/* Username Setup */
+"Choose Your Writing Name" = "Choose Your Writing Name";
+"This will be your unique identity on DailyWrite" = "This will be your unique identity on DailyWrite";
+"Your Name" = "Your Name";
+"username" = "username";
+"3-20 characters" = "3-20 characters";
+"Letters, numbers, underscores only" = "Letters, numbers, underscores only";
+"is available!" = "is available!";
+"is already taken. Try another." = "is already taken. Try another.";
+"Unable to check availability. Please try again." = "Unable to check availability. Please try again.";
+"Check Availability" = "Check Availability";
+"Failed to create profile. Please try again." = "Failed to create profile. Please try again.";
+
+/* Grammar & Spell Check */
+"Check Spelling" = "Check Spelling";
+"No spelling issues found!" = "No spelling issues found!";
+"No suggestions" = "No suggestions";
+"Found %@ issues" = "Found %@ issues";
+"Spelling Check" = "Spelling Check";
+
+/* AI Keywords */
+"AI Keywords" = "AI Keywords";
+"Generate New Keywords" = "Generate New Keywords";
+"Generating..." = "Generating...";
+"Keywords refreshed!" = "Keywords refreshed!";
+
+/* Notifications */
+"Notifications" = "Notifications";
+"Daily Reminder" = "Daily Reminder";
+"Enable Daily Reminder" = "Enable Daily Reminder";
+"Receive a daily notification to remind you to write." = "Receive a daily notification to remind you to write.";
+"Reminder Time" = "Reminder Time";
+"Time" = "Time";
+"Send Test Notification" = "Send Test Notification";
+"Open Settings to Enable Notifications" = "Open Settings to Enable Notifications";
+"Permission Required" = "Permission Required";
+"Please enable notifications in Settings to receive daily reminders." = "Please enable notifications in Settings to receive daily reminders.";
+"On" = "On";
+"Off" = "Off";
+
+/* Headings */
+"Heading" = "Heading";
+"Subheading" = "Subheading";
+"Sub-subheading" = "Sub-subheading";
+"Body" = "Body";
+
+/* Backup */
+"Backup" = "Backup";
+"Please sign in first" = "Please sign in first";
+"iCloud not available. Please check Settings > iCloud." = "iCloud not available. Please check Settings > iCloud.";
+"Successfully backed up %@ essays to iCloud!" = "Successfully backed up %@ essays to iCloud!";
+"Backup failed: %@" = "Backup failed: %@";
+"Export Format" = "Export Format";
+"Export %@ Essays" = "Export %@ Essays";
+"JSON (Structured Data)" = "JSON (Structured Data)";
+"Markdown (Readable)" = "Markdown (Readable)";
+"Plain Text" = "Plain Text";
+"Export your essays as a file you can save to Files, iCloud Drive, Google Drive, or share with others." = "Export your essays as a file you can save to Files, iCloud Drive, Google Drive, or share with others.";
+
+/* Settings Sections */
+"Backup & Export" = "Backup & Export";
+"Backup to iCloud" = "Backup to iCloud";
+"Export Essays" = "Export Essays";
+
+/* Drafts */
+"No Drafts" = "No Drafts";
+"Start writing to save drafts" = "Start writing to save drafts";
+"Edit Draft" = "Edit Draft";
+"Save Changes" = "Save Changes";
+"Keyword" = "Keyword";
+"Draft" = "Draft";
+
+/* Font Picker */
+"Preview" = "Preview";
+"Font Size" = "Font Size";
+"Fonts" = "Fonts";
+"Choose Font" = "Choose Font";
+
+/* Monthly Streak */
+"Last 30 Days" = "Last 30 Days";
+"Written" = "Written";
+"Missed" = "Missed";
