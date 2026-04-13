@@ -1,0 +1,10 @@
+// Telegram channel configuration to be added to openclaw.json
+{
+  channels: {
+    telegram: {
+      enabled: true,
+      botToken: "8644647331:AAEMmbJJ9qt1RJWVUUBBGQ2DeiwGnfuD4Bs",
+      dmPolicy: "pairing",  // Will require pairing code for security
+    },
+  },
+}
