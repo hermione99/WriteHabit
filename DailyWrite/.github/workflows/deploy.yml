@@ -1,0 +1,35 @@
+name: Deploy to TestFlight
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Select Xcode
+      run: sudo xcode-select -switch /Applications/Xcode.app/Contents/Developer
+    
+    - name: Install dependencies
+      run: |
+        brew install fastlane
+    
+    - name: Setup provisioning profiles (requires secrets)
+      env:
+        MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+        FASTLANE_USER: ${{ secrets.FASTLANE_USER }}
+        FASTLANE_PASSWORD: ${{ secrets.FASTLANE_PASSWORD }}
+      run: |
+        # This requires setting up fastlane match for code signing
+        echo "Setup required: Configure MATCH_PASSWORD, FASTLANE_USER, FASTLANE_PASSWORD in GitHub Secrets"
+    
+    - name: Build and upload
+      run: |
+        echo "Fastlane deployment would go here"
+        echo "Requires App Store Connect API key and code signing setup"
