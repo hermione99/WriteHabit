@@ -3,7 +3,18 @@ import Foundation
 struct AIKeywordService {
     static let shared = AIKeywordService()
     
-    private let openAIKey = "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" // User needs to add their key
+    // API Key should be stored in Config.plist (not in code)
+    private var openAIKey: String {
+        // Try to read from Config.plist
+        if let path = Bundle.main.path(forResource: "Config", ofType: "plist"),
+           let dict = NSDictionary(contentsOfFile: path) as? [String: Any],
+           let key = dict["OpenAIKey"] as? String {
+            return key
+        }
+        // Fallback: read from UserDefaults (set during onboarding)
+        return UserDefaults.standard.string(forKey: "openAIKey") ?? ""
+    }
+    
     private let keywordsCollection = "generated_keywords"
     
     // Generate keywords using OpenAI API
