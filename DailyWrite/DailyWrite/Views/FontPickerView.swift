@@ -6,7 +6,7 @@ struct FontPickerView: View {
     @State private var previewText = "The quick brown fox jumps over the lazy dog.\n다람쥐 헌 쳇바퀴에 타고파."
     
     let englishFonts: [AppFont] = [.system, .serif, .rounded, .monospaced, .georgia, .courier]
-    let koreanFonts: [AppFont] = [.appleSDGothic, .nanumMyeongjo, .nanumGothic]
+    let koreanFonts: [AppFont] = [.appleSDGothic, .nanumMyeongjo, .nanumGothic, .koPubBatang, .koPubDotum, .pretendard, .ridiBatang]
     
     var body: some View {
         NavigationStack {
@@ -82,6 +82,7 @@ struct FontRow: View {
     let font: AppFont
     let isSelected: Bool
     @StateObject private var fontManager = FontManager.shared
+    @StateObject private var themeManager = ThemeManager.shared
     
     var body: some View {
         Button {
@@ -103,7 +104,7 @@ struct FontRow: View {
                 
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(themeManager.accent)
                 }
             }
             .contentShape(Rectangle())

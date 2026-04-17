@@ -57,14 +57,32 @@
 
 /* Feed */
 "Following" = "Following";
+"Today" = "Today";
+"Recent" = "Recent";
+"By Topic" = "By Topic";
 "Discover" = "Discover";
 "Trending" = "Trending";
+"All" = "All";
+"Friends Only" = "Friends Only";
+"Date" = "Date";
+"Likes" = "Likes";
+"Popular" = "Popular";
+"Keyword" = "Keyword";
+"Past Topic" = "Past Topic";
+"Write" = "Write";
+"Back" = "Back";
+"No past topics yet" = "No past topics yet";
+"Check back tomorrow for your first topic archive" = "Check back tomorrow for your first topic archive";
 "Comments" = "Comments";
 "Add a comment..." = "Add a comment...";
 "Post" = "Post";
-"Likes" = "Likes";
 "Like" = "Like";
 "Unlike" = "Unlike";
+
+/* Editor Alerts */
+"Already Written" = "Already Written";
+"You already wrote about this topic. Would you like to edit your existing essay?" = "You already wrote about this topic. Would you like to edit your existing essay?";
+"Edit Existing" = "Edit Existing";
 
 /* Profile */
 "Your Essays" = "Your Essays";
@@ -202,6 +220,19 @@
 "Choose Font" = "Choose Font";
 
 /* Monthly Streak */
-"Last 30 Days" = "Last 30 Days";
+"%@ replied to your comment" = "%@ replied to your comment";
+"%@ commented on your essay" = "%@ commented on your essay";
 "Written" = "Written";
 "Missed" = "Missed";
+
+/* Format Menu */
+"Simple" = "Simple";
+"Dashed" = "Dashed";
+"Double" = "Double";
+"Divider" = "Divider";
+
+/* Text Alignment */
+"Alignment" = "Alignment";
+"Left" = "Left";
+"Center" = "Center";
+"Right" = "Right";

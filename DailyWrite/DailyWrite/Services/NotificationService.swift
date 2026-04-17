@@ -376,4 +376,116 @@ extension NotificationService {
             print("Error deleting FCM token: \(error)")
         }
     }
+    
+    // MARK: - Comment/Reply Notifications
+    
+    /// Sends a notification to the essay author when someone comments
+    func notifyEssayAuthorOfComment(essayId: String, essayAuthorId: String, commenterName: String, commentContent: String) async {
+        // Don't notify if user is commenting on their own essay
+        guard let currentUserId = Auth.auth().currentUser?.uid,
+              currentUserId != essayAuthorId else { return }
+        
+        #if DEBUG
+        print("[DEBUG Notification] Sending comment notification to user: \(essayAuthorId)")
+        #endif
+        
+        // Create in-app notification
+        let notification = InAppNotification(
+            id: nil,
+            userId: essayAuthorId,
+            type: .comment,
+            title: "New Comment".localized,
+            body: String(format: "%@ commented on your essay".localized, commenterName),
+            relatedId: essayId,
+            isRead: false,
+            createdAt: Date()
+        )
+        
+        do {
+            try await saveInAppNotification(notification)
+            #if DEBUG
+            print("[DEBUG Notification] Saved in-app notification successfully")
+            #endif
+            
+            // Queue push notification for Cloud Functions
+            await sendPushNotification(
+                to: essayAuthorId,
+                title: "New Comment".localized,
+                body: "\(commenterName): \(String(commentContent.prefix(50)))\(commentContent.count > 50 ? "..." : "")"
+            )
+        } catch {
+            print("Error sending comment notification: \(error)")
+        }
+    }
+    
+    /// Sends a notification when someone replies to a comment
+    func notifyCommentAuthorOfReply(parentCommentId: String, parentCommentAuthorId: String, replierName: String, replyContent: String, essayId: String) async {
+        // Don't notify if user is replying to their own comment
+        guard let currentUserId = Auth.auth().currentUser?.uid,
+              currentUserId != parentCommentAuthorId else { return }
+        
+        #if DEBUG
+        print("[DEBUG Notification] Sending reply notification to user: \(parentCommentAuthorId)")
+        #endif
+        
+        let notification = InAppNotification(
+            id: nil,
+            userId: parentCommentAuthorId,
+            type: .reply,
+            title: "New Reply".localized,
+            body: String(format: "%@ replied to your comment".localized, replierName),
+            relatedId: essayId,
+            isRead: false,
+            createdAt: Date()
+        )
+        
+        do {
+            try await saveInAppNotification(notification)
+            #if DEBUG
+            print("[DEBUG Notification] Saved in-app notification successfully")
+            #endif
+            
+            await sendPushNotification(
+                to: parentCommentAuthorId,
+                title: "New Reply".localized,
+                body: "\(replierName): \(String(replyContent.prefix(50)))\(replyContent.count > 50 ? "..." : "")"
+            )
+        } catch {
+            print("Error sending reply notification: \(error)")
+        }
+    }
+    
+    private func saveInAppNotification(_ notification: InAppNotification) async throws {
+        let docRef = db.collection("notifications").document()
+        try await docRef.setData(notification.dictionary)
+    }
+    
+    private func sendPushNotification(to userId: String, title: String, body: String) async {
+        do {
+            // Fetch user's FCM token
+            let userDoc = try await db.collection("users").document(userId).getDocument()
+            guard let fcmToken = userDoc.data()?["fcmToken"] as? String else {
+                print("No FCM token for user \(userId)")
+                return
+            }
+            
+            // Send notification via FCM (this would typically be done server-side)
+            // For now, we'll rely on Firestore triggers in Firebase Cloud Functions
+            // to send actual push notifications
+            print("Would send push notification to token: \(fcmToken.prefix(20))...")
+            
+            // Store notification in Firestore for Cloud Function to pick up
+            let messageRef = db.collection("pushNotifications").document()
+            try await messageRef.setData([
+                "token": fcmToken,
+                "title": title,
+                "body": body,
+                "userId": userId,
+                "sent": false,
+                "createdAt": Timestamp(date: Date())
+            ])
+        } catch {
+            print("Error sending push notification: \(error)")
+        }
+    }
 }

@@ -3,6 +3,7 @@ import SwiftUI
 // Simple font picker that should definitely work
 struct SimpleFontSettingsView: View {
     @StateObject private var fontManager = FontManager.shared
+    @StateObject private var themeManager = ThemeManager.shared
     @Environment(\.dismiss) private var dismiss
     
     let fonts: [AppFont] = AppFont.allCases
@@ -37,7 +38,7 @@ struct SimpleFontSettingsView: View {
                                 Spacer()
                                 if fontManager.currentFont == font {
                                     Image(systemName: "checkmark")
-                                        .foregroundStyle(.blue)
+                                        .foregroundStyle(themeManager.accent)
                                 }
                             }
                         }

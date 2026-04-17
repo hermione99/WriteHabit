@@ -137,9 +137,12 @@ struct WritingChallengesView: View {
                         ProgressView()
                             .padding()
                     } else {
-                        // Progress summary
+                        // Progress summary - calculate completed based on actual progress
+                        let completedCount = allChallenges.filter { challenge in
+                            calculateProgress(for: challenge) >= challenge.requirement
+                        }.count
                         ProgressSummaryView(
-                            completed: userChallenges.filter { $0.isCompleted }.count,
+                            completed: completedCount,
                             total: allChallenges.count
                         )
                         
@@ -147,10 +150,12 @@ struct WritingChallengesView: View {
                         LazyVStack(spacing: 12) {
                             ForEach(allChallenges) { challenge in
                                 let userChallenge = userChallenges.first { $0.challengeId == challenge.id }
+                                // Calculate fresh progress from essays, not from stored value
+                                let currentProgress = calculateProgress(for: challenge)
                                 ChallengeCard(
                                     challenge: challenge,
-                                    progress: userChallenge?.progress ?? 0,
-                                    isCompleted: userChallenge?.isCompleted ?? false
+                                    progress: currentProgress,
+                                    isCompleted: userChallenge?.isCompleted ?? (currentProgress >= challenge.requirement)
                                 )
                             }
                         }
@@ -186,12 +191,20 @@ struct WritingChallengesView: View {
         do {
             // Load user's essays
             essays = try await FirebaseService.shared.getUserEssays(userId: userId)
+            print("[DEBUG] Loaded \(essays.count) essays")
             
             // Load or create user challenges
             userChallenges = try await FirebaseService.shared.getUserChallenges(userId: userId)
+            print("[DEBUG] Loaded \(userChallenges.count) user challenges")
             
             // Check for newly completed challenges
             await checkCompletedChallenges()
+            
+            // Print progress for debugging
+            for challenge in allChallenges {
+                let progress = calculateProgress(for: challenge)
+                print("[DEBUG] Challenge '\(challenge.title)': progress \(progress)/\(challenge.requirement)")
+            }
             
         } catch {
             print("Error loading challenges: \(error)")

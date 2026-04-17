@@ -24,7 +24,6 @@
 		AB58A4242F8BD05200F26299 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A4232F8BD05200F26299 /* UserProfile.swift */; };
 		AB58A42A2F8BD16100F26299 /* FontManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A4292F8BD16100F26299 /* FontManager.swift */; };
 		AB58A4382F8BDAC100F26299 /* KeywordGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A4372F8BDAC100F26299 /* KeywordGenerator.swift */; };
-		AB58A4442F8BE07200F26299 /* GrammarTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A4432F8BE07200F26299 /* GrammarTextEditor.swift */; };
 		AB58A4522F8BEB0300F26299 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A4512F8BEB0300F26299 /* SettingsView.swift */; };
 		AB58A4542F8BEC2900F26299 /* UsernameSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A4532F8BEC2900F26299 /* UsernameSetupView.swift */; };
 		AB58A4562F8BEC6500F26299 /* AllEssaysView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A4552F8BEC6500F26299 /* AllEssaysView.swift */; };
@@ -49,12 +48,25 @@
 		AB58A48F2F8C89CC00F26299 /* BookExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A48E2F8C89CC00F26299 /* BookExportView.swift */; };
 		AB58A4912F8C89D700F26299 /* WritingAnalyticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A4902F8C89D700F26299 /* WritingAnalyticsView.swift */; };
 		AB58A4932F8C89DF00F26299 /* WritingChallengesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A4922F8C89DF00F26299 /* WritingChallengesView.swift */; };
+		AB7356872F8CFEC4008CCDC6 /* KoPubBatang-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = AB7356852F8CFEC4008CCDC6 /* KoPubBatang-Regular.otf */; };
+		AB7356882F8CFEC4008CCDC6 /* RIDIBatang-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = AB7356862F8CFEC4008CCDC6 /* RIDIBatang-Regular.otf */; };
+		AB73568A2F8CFECE008CCDC6 /* KoPubDotum-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = AB7356892F8CFECE008CCDC6 /* KoPubDotum-Regular.otf */; };
+		AB73568C2F8CFEDF008CCDC6 /* Pretendard-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = AB73568B2F8CFEDF008CCDC6 /* Pretendard-Regular.otf */; };
+		AB73568E2F8DF865008CCDC6 /* RichTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB73568D2F8DF865008CCDC6 /* RichTextEditor.swift */; };
+		AB7356922F8EBE6E008CCDC6 /* KeywordsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB7356912F8EBE6E008CCDC6 /* KeywordsService.swift */; };
+		AB7356942F8F278A008CCDC6 /* NanumMyeongjo-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AB7356932F8F278A008CCDC6 /* NanumMyeongjo-Regular.ttf */; };
+		AB7356962F8F279A008CCDC6 /* NanumGothic-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AB7356952F8F279A008CCDC6 /* NanumGothic-Regular.ttf */; };
+		AB7356982F8F663D008CCDC6 /* NotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB7356972F8F663D008CCDC6 /* NotificationsView.swift */; };
+		AB73569A2F8F6C2B008CCDC6 /* AvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB7356992F8F6C2B008CCDC6 /* AvatarView.swift */; };
+		AB7356A02F8F7812008CCDC6 /* ProfileImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB73569F2F8F7812008CCDC6 /* ProfileImagePicker.swift */; };
+		AB7356A42F8F91CE008CCDC6 /* ThreadedCommentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB7356A32F8F91CE008CCDC6 /* ThreadedCommentsView.swift */; };
 		AB798F282F8BB4650083B69C /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AB798F272F8BB4650083B69C /* GoogleService-Info.plist */; };
 		AB798F2B2F8BB51A0083B69C /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = AB798F2A2F8BB51A0083B69C /* FirebaseAnalytics */; };
 		AB798F2D2F8BB51A0083B69C /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = AB798F2C2F8BB51A0083B69C /* FirebaseAuth */; };
 		AB798F2F2F8BB51A0083B69C /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = AB798F2E2F8BB51A0083B69C /* FirebaseFirestore */; };
 		AB798F342F8BB98D0083B69C /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = AB798F332F8BB98D0083B69C /* GoogleSignIn */; };
 		AB798F362F8BB98D0083B69C /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = AB798F352F8BB98D0083B69C /* GoogleSignInSwift */; };
+		AB799A582F8CDBAA002FE86F /* RecentlyDeletedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB799A572F8CDBAA002FE86F /* RecentlyDeletedView.swift */; };
 		ABE4FC8D2F8C95B4003B22B6 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = ABE4FC8C2F8C95B4003B22B6 /* GoogleSignIn */; };
 		ABE4FC8F2F8C95B4003B22B6 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = ABE4FC8E2F8C95B4003B22B6 /* GoogleSignInSwift */; };
 		ABE4FC922F8C95E1003B22B6 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = ABE4FC912F8C95E1003B22B6 /* FirebaseAnalytics */; };
@@ -78,14 +90,13 @@
 		AA0000000000000000000012 /* FirebaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseService.swift; sourceTree = "<group>"; };
 		AA0000000000000000000014 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AB05CB9B2F8CAB35007977EA /* KeywordEmojiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeywordEmojiService.swift; sourceTree = "<group>"; };
-		AB58A4092F8BCAC400F26299 /* LanguageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageManager.swift; sourceTree = "<group>"; };
+		AB58A4092F8BCAC400F26299 /* LanguageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LanguageManager.swift; path = DailyWrite/Models/LanguageManager.swift; sourceTree = "<group>"; };
 		AB58A4192F8BCCA800F26299 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Localizable.strings; sourceTree = "<group>"; };
 		AB58A41C2F8BCCA800F26299 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = Localizable.strings; sourceTree = "<group>"; };
 		AB58A4212F8BCDB800F26299 /* GoogleService-Info 3.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info 3.plist"; sourceTree = "<group>"; };
-		AB58A4232F8BD05200F26299 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
-		AB58A4292F8BD16100F26299 /* FontManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontManager.swift; sourceTree = "<group>"; };
-		AB58A4372F8BDAC100F26299 /* KeywordGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeywordGenerator.swift; sourceTree = "<group>"; };
-		AB58A4432F8BE07200F26299 /* GrammarTextEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrammarTextEditor.swift; sourceTree = "<group>"; };
+		AB58A4232F8BD05200F26299 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = UserProfile.swift; path = DailyWrite/Models/UserProfile.swift; sourceTree = "<group>"; };
+		AB58A4292F8BD16100F26299 /* FontManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FontManager.swift; path = DailyWrite/Utils/FontManager.swift; sourceTree = "<group>"; };
+		AB58A4372F8BDAC100F26299 /* KeywordGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = KeywordGenerator.swift; path = DailyWrite/Services/KeywordGenerator.swift; sourceTree = "<group>"; };
 		AB58A4512F8BEB0300F26299 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		AB58A4532F8BEC2900F26299 /* UsernameSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsernameSetupView.swift; sourceTree = "<group>"; };
 		AB58A4552F8BEC6500F26299 /* AllEssaysView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AllEssaysView.swift; sourceTree = "<group>"; };
@@ -111,8 +122,21 @@
 		AB58A48E2F8C89CC00F26299 /* BookExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookExportView.swift; sourceTree = "<group>"; };
 		AB58A4902F8C89D700F26299 /* WritingAnalyticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WritingAnalyticsView.swift; sourceTree = "<group>"; };
 		AB58A4922F8C89DF00F26299 /* WritingChallengesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WritingChallengesView.swift; sourceTree = "<group>"; };
+		AB7356852F8CFEC4008CCDC6 /* KoPubBatang-Regular.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "KoPubBatang-Regular.otf"; path = "Resources/KoPubBatang-Regular.otf"; sourceTree = "<group>"; };
+		AB7356862F8CFEC4008CCDC6 /* RIDIBatang-Regular.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "RIDIBatang-Regular.otf"; path = "Resources/RIDIBatang-Regular.otf"; sourceTree = "<group>"; };
+		AB7356892F8CFECE008CCDC6 /* KoPubDotum-Regular.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "KoPubDotum-Regular.otf"; path = "Resources/KoPubDotum-Regular.otf"; sourceTree = "<group>"; };
+		AB73568B2F8CFEDF008CCDC6 /* Pretendard-Regular.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Pretendard-Regular.otf"; path = "Resources/Pretendard-Regular.otf"; sourceTree = "<group>"; };
+		AB73568D2F8DF865008CCDC6 /* RichTextEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RichTextEditor.swift; path = DailyWrite/Views/RichTextEditor.swift; sourceTree = "<group>"; };
+		AB7356912F8EBE6E008CCDC6 /* KeywordsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeywordsService.swift; sourceTree = "<group>"; };
+		AB7356932F8F278A008CCDC6 /* NanumMyeongjo-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "NanumMyeongjo-Regular.ttf"; sourceTree = "<group>"; };
+		AB7356952F8F279A008CCDC6 /* NanumGothic-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "NanumGothic-Regular.ttf"; sourceTree = "<group>"; };
+		AB7356972F8F663D008CCDC6 /* NotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsView.swift; sourceTree = "<group>"; };
+		AB7356992F8F6C2B008CCDC6 /* AvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarView.swift; sourceTree = "<group>"; };
+		AB73569F2F8F7812008CCDC6 /* ProfileImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileImagePicker.swift; sourceTree = "<group>"; };
+		AB7356A32F8F91CE008CCDC6 /* ThreadedCommentsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadedCommentsView.swift; sourceTree = "<group>"; };
 		AB798F272F8BB4650083B69C /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		AB798F372F8BBA2B0083B69C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		AB799A572F8CDBAA002FE86F /* RecentlyDeletedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentlyDeletedView.swift; sourceTree = "<group>"; };
 		ABE4FC9B2F8C970D003B22B6 /* FriendsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendsView.swift; sourceTree = "<group>"; };
 		ABE4FC9D2F8C971B003B22B6 /* FriendsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendsService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -151,6 +175,12 @@
 		AA0000000000000000000017 /* DailyWrite */ = {
 			isa = PBXGroup;
 			children = (
+				AB7356952F8F279A008CCDC6 /* NanumGothic-Regular.ttf */,
+				AB7356932F8F278A008CCDC6 /* NanumMyeongjo-Regular.ttf */,
+				AB7356862F8CFEC4008CCDC6 /* RIDIBatang-Regular.otf */,
+				AB73568B2F8CFEDF008CCDC6 /* Pretendard-Regular.otf */,
+				AB7356892F8CFECE008CCDC6 /* KoPubDotum-Regular.otf */,
+				AB7356852F8CFEC4008CCDC6 /* KoPubBatang-Regular.otf */,
 				AB58A4752F8C02DA00F26299 /* DailyWrite.entitlements */,
 				AB798F372F8BBA2B0083B69C /* Info.plist */,
 				AA0000000000000000000002 /* DailyWriteApp.swift */,
@@ -165,6 +195,11 @@
 		AA0000000000000000000018 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				AB7356A32F8F91CE008CCDC6 /* ThreadedCommentsView.swift */,
+				AB73569F2F8F7812008CCDC6 /* ProfileImagePicker.swift */,
+				AB7356992F8F6C2B008CCDC6 /* AvatarView.swift */,
+				AB7356972F8F663D008CCDC6 /* NotificationsView.swift */,
+				AB799A572F8CDBAA002FE86F /* RecentlyDeletedView.swift */,
 				ABE4FC9B2F8C970D003B22B6 /* FriendsView.swift */,
 				AB58A4922F8C89DF00F26299 /* WritingChallengesView.swift */,
 				AB58A4902F8C89D700F26299 /* WritingAnalyticsView.swift */,
@@ -204,6 +239,7 @@
 		AA000000000000000000001A /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				AB7356912F8EBE6E008CCDC6 /* KeywordsService.swift */,
 				AB05CB9B2F8CAB35007977EA /* KeywordEmojiService.swift */,
 				ABE4FC9D2F8C971B003B22B6 /* FriendsService.swift */,
 				AB58A47A2F8C30CC00F26299 /* TrackingTransparencyService.swift */,
@@ -219,8 +255,8 @@
 		AA000000000000000000001B = {
 			isa = PBXGroup;
 			children = (
+				AB73568D2F8DF865008CCDC6 /* RichTextEditor.swift */,
 				AB58A47C2F8C37DE00F26299 /* Localization.swift */,
-				AB58A4432F8BE07200F26299 /* GrammarTextEditor.swift */,
 				AB58A4372F8BDAC100F26299 /* KeywordGenerator.swift */,
 				AB58A4292F8BD16100F26299 /* FontManager.swift */,
 				AB58A4232F8BD05200F26299 /* UserProfile.swift */,
@@ -308,11 +344,17 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB7356872F8CFEC4008CCDC6 /* KoPubBatang-Regular.otf in Resources */,
+				AB7356962F8F279A008CCDC6 /* NanumGothic-Regular.ttf in Resources */,
+				AB7356882F8CFEC4008CCDC6 /* RIDIBatang-Regular.otf in Resources */,
 				AA0000000000000000000013 /* Assets.xcassets in Resources */,
 				AB58A41F2F8BCCA800F26299 /* Localizable.strings in Resources */,
+				AB73568C2F8CFEDF008CCDC6 /* Pretendard-Regular.otf in Resources */,
 				AB58A4202F8BCCA800F26299 /* Localizable.strings in Resources */,
 				AB798F282F8BB4650083B69C /* GoogleService-Info.plist in Resources */,
+				AB73568A2F8CFECE008CCDC6 /* KoPubDotum-Regular.otf in Resources */,
 				AB58A4222F8BCDB800F26299 /* GoogleService-Info 3.plist in Resources */,
+				AB7356942F8F278A008CCDC6 /* NanumMyeongjo-Regular.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -323,10 +365,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB7356A02F8F7812008CCDC6 /* ProfileImagePicker.swift in Sources */,
 				AB58A48D2F8C89C000F26299 /* ThemePickerView.swift in Sources */,
 				AB58A45A2F8BEC7800F26299 /* EditProfileView.swift in Sources */,
 				AB58A42A2F8BD16100F26299 /* FontManager.swift in Sources */,
 				AA0000000000000000000001 /* DailyWriteApp.swift in Sources */,
+				AB7356922F8EBE6E008CCDC6 /* KeywordsService.swift in Sources */,
 				AB58A4662F8BECCB00F26299 /* AIKeywordService.swift in Sources */,
 				AB58A4582F8BEC7100F26299 /* DraftsView.swift in Sources */,
 				AB05CB9C2F8CAB35007977EA /* KeywordEmojiService.swift in Sources */,
@@ -337,6 +381,8 @@
 				AB58A4382F8BDAC100F26299 /* KeywordGenerator.swift in Sources */,
 				AB58A4682F8BECD200F26299 /* KeywordImageService.swift in Sources */,
 				AA0000000000000000000003 /* ContentView.swift in Sources */,
+				AB799A582F8CDBAA002FE86F /* RecentlyDeletedView.swift in Sources */,
+				AB73568E2F8DF865008CCDC6 /* RichTextEditor.swift in Sources */,
 				AB58A4522F8BEB0300F26299 /* SettingsView.swift in Sources */,
 				AB58A48F2F8C89CC00F26299 /* BookExportView.swift in Sources */,
 				AB58A47B2F8C30CC00F26299 /* TrackingTransparencyService.swift in Sources */,
@@ -349,16 +395,18 @@
 				AB58A4772F8C045900F26299 /* NotificationService.swift in Sources */,
 				AA000000000000000000000D /* AuthView.swift in Sources */,
 				AA000000000000000000000F /* Essay.swift in Sources */,
+				AB7356982F8F663D008CCDC6 /* NotificationsView.swift in Sources */,
 				AB58A4642F8BECB400F26299 /* SimpleFontSettingsView.swift in Sources */,
 				AA0000000000000000000011 /* FirebaseService.swift in Sources */,
 				AB58A48B2F8C899700F26299 /* ThemeManager.swift in Sources */,
 				AB58A4542F8BEC2900F26299 /* UsernameSetupView.swift in Sources */,
 				AB58A40A2F8BCAC400F26299 /* LanguageManager.swift in Sources */,
-				AB58A4442F8BE07200F26299 /* GrammarTextEditor.swift in Sources */,
 				ABE4FC9E2F8C971B003B22B6 /* FriendsService.swift in Sources */,
 				AB58A47D2F8C37DE00F26299 /* Localization.swift in Sources */,
+				AB73569A2F8F6C2B008CCDC6 /* AvatarView.swift in Sources */,
 				AB58A4562F8BEC6500F26299 /* AllEssaysView.swift in Sources */,
 				AB58A4932F8C89DF00F26299 /* WritingChallengesView.swift in Sources */,
+				AB7356A42F8F91CE008CCDC6 /* ThreadedCommentsView.swift in Sources */,
 				ABE4FC9C2F8C970D003B22B6 /* FriendsView.swift in Sources */,
 				AB58A45C2F8BEC8200F26299 /* FontListView.swift in Sources */,
 				AB58A4912F8C89D700F26299 /* WritingAnalyticsView.swift in Sources */,

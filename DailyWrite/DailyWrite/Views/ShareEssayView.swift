@@ -2,10 +2,15 @@ import SwiftUI
 
 struct ShareEssayView: View {
     let essay: Essay
+    @StateObject private var themeManager = ThemeManager.shared
     @State private var friends: [UserProfile] = []
+    @StateObject private var themeManager = ThemeManager.shared
     @State private var selectedFriends: Set<String> = []
+    @StateObject private var themeManager = ThemeManager.shared
     @State private var isLoading = true
+    @StateObject private var themeManager = ThemeManager.shared
     @State private var showSuccess = false
+    @StateObject private var themeManager = ThemeManager.shared
     @State private var message = ""
     @Environment(\.dismiss) private var dismiss
     
@@ -144,7 +149,7 @@ struct FriendSelectionRow: View {
             HStack(spacing: 12) {
                 ZStack {
                     Circle()
-                        .fill(isSelected ? Color.blue.opacity(0.2) : Color.gray.opacity(0.2))
+                        .fill(isSelected ? themeManager.accent.opacity(0.2) : Color.gray.opacity(0.2))
                         .frame(width: 44, height: 44)
                     
                     Text(String(friend.displayName.prefix(1)))

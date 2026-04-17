@@ -3,6 +3,8 @@ import FirebaseAuth
 
 struct UsernameSetupView: View {
     @Binding var isAuthenticated: Bool
+    @Binding var needsUsernameSetup: Bool
+    @StateObject private var themeManager = ThemeManager.shared
     @State private var username = ""
     @State private var displayName = ""
     @State private var isChecking = false
@@ -193,6 +195,7 @@ struct UsernameSetupView: View {
                     username: username
                 )
                 isAuthenticated = true
+                needsUsernameSetup = false
             } catch {
                 errorMessage = "Failed to create profile. Please try again.".localized
             }
@@ -201,5 +204,5 @@ struct UsernameSetupView: View {
 }
 
 #Preview {
-    UsernameSetupView(isAuthenticated: .constant(false))
+    UsernameSetupView(isAuthenticated: .constant(false), needsUsernameSetup: .constant(true))
 }

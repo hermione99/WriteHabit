@@ -10,6 +10,7 @@ struct BookExportView: View {
     @State private var pdfData: Data?
     @State private var bookTitle = "My Writing Collection"
     @State private var showingShareSheet = false
+    @StateObject private var themeManager = ThemeManager.shared
     @State private var exportFormat: ExportFormat = .pdf
     
     enum ExportFormat: String, CaseIterable {
@@ -98,7 +99,7 @@ struct BookExportView: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(selectedCount > 0 ? Color.blue : Color.gray)
+                        .background(selectedCount > 0 ? themeManager.accent : Color.gray)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                     .disabled(selectedCount == 0)
@@ -228,6 +229,7 @@ struct EssaySelectionRow: View {
     let essay: Essay
     let isSelected: Bool
     let onTap: () -> Void
+    @StateObject private var themeManager = ThemeManager.shared
     
     var body: some View {
         Button(action: onTap) {
@@ -235,7 +237,7 @@ struct EssaySelectionRow: View {
                 // Selection indicator
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
-                    .foregroundStyle(isSelected ? .blue : .secondary)
+                    .foregroundStyle(isSelected ? themeManager.accent : .secondary)
                 
                 // Essay info
                 VStack(alignment: .leading, spacing: 4) {

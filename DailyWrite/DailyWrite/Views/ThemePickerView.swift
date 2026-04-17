@@ -29,14 +29,14 @@ struct ThemePickerView: View {
                             
                             if themeManager.currentTheme == theme {
                                 Image(systemName: "checkmark")
-                                    .foregroundStyle(.blue)
+                                    .foregroundStyle(themeManager.accent)
                             }
                         }
                         .padding(.vertical, 4)
                     }
                 }
             } footer: {
-                Text("Choose your preferred appearance. The paper texture will adapt to match light or dark mode.".localized)
+                Text("Choose your preferred appearance. Light, Dark, or System.".localized)
             }
             
             // Preview

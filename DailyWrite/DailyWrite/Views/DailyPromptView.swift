@@ -3,287 +3,360 @@ import FirebaseAuth
 
 struct DailyPromptView: View {
     @State private var isWriting = false
-    @State private var userStats: UserStats?
     @State private var dailyKeyword: String = ""
-    @State private var monthlyActivity: [Date: Bool] = [:]
+    @State private var writingDates: [Date] = []
+    @State private var currentStreak: Int = 0
+    @State private var selectedDate: Date? = nil
+    @State private var showingEssayDetail = false
+    @State private var selectedEssay: Essay? = nil
     @StateObject private var languageManager = LanguageManager.shared
-    @StateObject private var fontManager = FontManager.shared
+    
+    private let calendar = Calendar.current
+    private let weekDays = ["S", "M", "T", "W", "T", "F", "S"]
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Header section with streak
-                    VStack(spacing: 16) {
-                        // Streak badge
-                        if let stats = userStats, stats.streakDays > 0 {
-                            StreakBadgeView(days: stats.streakDays)
-                        } else {
-                            StreakBadgeView(days: 0)
-                        }
-                        
-                        Text("Today's Keyword".localized)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                        
-                        Text(dailyKeyword)
-                            .font(.system(.largeTitle, design: .serif))
-                            .fontWeight(.bold)
+            VStack(alignment: .leading, spacing: 0) {
+                // Large Date Display
+                VStack(alignment: .leading, spacing: 4) {
+                    // Date number and day of week together
+                    HStack(alignment: .firstTextBaseline, spacing: 12) {
+                        Text("\(calendar.component(.day, from: Date()))")
+                            .font(.system(size: 120, weight: .bold, design: .default))
                             .foregroundStyle(.primary)
-                            .minimumScaleFactor(0.5)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
+                        
+                        Text(dayString(from: Date()))
+                            .font(.system(size: 24, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .padding(.bottom, 12)
                     }
-                    .padding(.top, 20)
                     
-                    // Writing button
-                    Button {
-                        isWriting = true
-                    } label: {
-                        HStack {
-                            Image(systemName: "pencil.line")
-                            Text("Start Writing".localized)
-                        }
-                        .font(.headline)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                    }
-                    .padding(.horizontal)
-                    
-                    // Monthly streak calendar
-                    MonthlyStreakView(activity: monthlyActivity)
-                        .padding(.horizontal)
-                        .id(languageManager.currentLanguage.rawValue + "_" + UUID().uuidString)
-                    
-                    // Stats
-                    HStack(spacing: 40) {
-                        StatView(value: "\(userStats?.totalWords ?? 0)", label: "Words Written".localized)
-                        StatView(value: "\(userStats?.essayCount ?? 0)", label: "Published".localized)
-                    }
-                    .padding(.top, 10)
-                    
-                    Spacer()
+                    // Month/Year below
+                    Text(monthYearString(from: Date()))
+                        .font(.system(size: 18, weight: .semibold))
+                        .textCase(.uppercase)
+                        .foregroundStyle(.primary)
                 }
-                .padding()
+                .padding(.horizontal, 24)
+                .padding(.top, 20)
+                
+                Spacer()
+                
+                // Center - Today's Prompt
+                VStack(spacing: 12) {
+                    Text("Today's Prompt".localized)
+                        .font(.system(size: 13, weight: .medium))
+                        .textCase(.uppercase)
+                        .tracking(2)
+                        .foregroundStyle(.secondary)
+                    
+                    Text(dailyKeyword)
+                        .font(.system(size: 48, weight: .bold, design: .serif))
+                        .foregroundStyle(.primary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                }
+                .frame(maxWidth: .infinity)
+                
+                Spacer()
+                
+                // Dot Calendar
+                VStack(spacing: 16) {
+                    // Weekday headers
+                    HStack(spacing: 0) {
+                        ForEach(weekDays, id: \.self) { day in
+                            Text(day)
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity)
+                        }
+                    }
+                    
+                    // Calendar grid - 5 rows x 7 columns
+                    DotCalendarGrid(writingDates: writingDates) { date in
+                        Task {
+                            await loadEssayForDate(date)
+                        }
+                    }
+                }
+                .padding(.horizontal, 24)
+                
+                Spacer()
+                
+                // Write Button
+                Button {
+                    isWriting = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "pencil")
+                        Text("Write".localized)
+                    }
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(
+                        Capsule()
+                            .fill(.primary)
+                    )
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 40)
             }
             .fullScreenCover(isPresented: $isWriting) {
                 NavigationStack {
                     SimpleWritingEditorView(keyword: dailyKeyword)
                 }
             }
+            .sheet(item: $selectedEssay) { essay in
+                NavigationStack {
+                    EssayDetailView(essay: essay)
+                        .navigationTitle("Essay".localized)
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .topBarTrailing) {
+                                Button("Done".localized) {
+                                    selectedEssay = nil
+                                }
+                            }
+                        }
+                }
+            }
         }
         .task {
             await loadDailyKeyword()
-            await loadUserStats()
-            await loadMonthlyActivity()
+            await loadWritingDates()
+            await loadStreak()
         }
+    }
+    
+    private func monthYearString(from date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = languageManager.currentLanguage == .korean ? Locale(identifier: "ko_KR") : Locale(identifier: "en_US")
+        formatter.dateFormat = "MMMM yyyy"
+        return formatter.string(from: date).uppercased()
+    }
+    
+    private func dayString(from date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = languageManager.currentLanguage == .korean ? Locale(identifier: "ko_KR") : Locale(identifier: "en_US")
+        formatter.dateFormat = "EEE"
+        return formatter.string(from: date)
     }
     
     private func loadDailyKeyword() async {
         dailyKeyword = await KeywordGenerator.shared.getDailyKeyword(language: languageManager.currentLanguage)
     }
     
-    private func loadUserStats() async {
+    private func loadWritingDates() async {
         guard let userId = Auth.auth().currentUser?.uid else { return }
         do {
             let essays = try await FirebaseService.shared.getUserEssays(userId: userId)
-            let essayCount = essays.count
-            let totalWords = essays.reduce(0) { $0 + $1.content.count }
-            let streakDays = calculateStreak(from: essays)
-            userStats = UserStats(essayCount: essayCount, streakDays: streakDays, totalWords: totalWords)
+            writingDates = essays.filter { !$0.isDraft }.map { $0.createdAt }
         } catch {
-            print("Error loading user stats: \(error)")
+            print("Error loading writing dates: \(error)")
         }
     }
     
-    private func loadMonthlyActivity() async {
+    private func loadStreak() async {
         guard let userId = Auth.auth().currentUser?.uid else { return }
         do {
-            let calendar = Calendar.current
-            let endDate = Date()
-            let startDate = calendar.date(byAdding: .day, value: -29, to: endDate)!
-            
-            let essays = try await FirebaseService.shared.getUserEssaysInDateRange(
-                userId: userId,
-                startDate: startDate,
-                endDate: endDate
-            )
-            
-            var activity: [Date: Bool] = [:]
-            for essay in essays {
-                let day = calendar.startOfDay(for: essay.createdAt)
-                activity[day] = true
-            }
-            monthlyActivity = activity
+            let essays = try await FirebaseService.shared.getUserEssays(userId: userId)
+            currentStreak = calculateCurrentStreak(from: essays)
         } catch {
-            print("Error loading monthly activity: \(error)")
+            print("Error loading streak: \(error)")
         }
     }
     
-    private func calculateStreak(from essays: [Essay]) -> Int {
-        guard !essays.isEmpty else { return 0 }
+    private func calculateCurrentStreak(from essays: [Essay]) -> Int {
+        let publishedEssays = essays.filter { !$0.isDraft }
+        guard !publishedEssays.isEmpty else { return 0 }
         
         let calendar = Calendar.current
-        let sortedEssays = essays.sorted { $0.createdAt > $1.createdAt }
+        let sortedDates = publishedEssays.map { $0.createdAt }.sorted(by: >)
         var streak = 0
-        var currentDate = Date()
+        var checkDate = calendar.startOfDay(for: Date())
         
-        for essay in sortedEssays {
-            let essayDate = calendar.startOfDay(for: essay.createdAt)
-            let today = calendar.startOfDay(for: currentDate)
-            
-            if calendar.isDate(essayDate, inSameDayAs: today) {
+        if !calendar.isDate(sortedDates[0], inSameDayAs: checkDate) {
+            guard let yesterday = calendar.date(byAdding: .day, value: -1, to: checkDate),
+                  calendar.isDate(sortedDates[0], inSameDayAs: yesterday) else {
+                return 0
+            }
+        }
+        
+        for date in sortedDates {
+            if calendar.isDate(date, inSameDayAs: checkDate) {
                 streak += 1
-                currentDate = calendar.date(byAdding: .day, value: -1, to: today)!
-            } else if calendar.isDate(essayDate, inSameDayAs: calendar.date(byAdding: .day, value: -1, to: today)!) {
-                streak += 1
-                currentDate = essayDate
-            } else {
+                guard let previousDay = calendar.date(byAdding: .day, value: -1, to: checkDate) else { break }
+                checkDate = previousDay
+            } else if date < checkDate {
                 break
             }
         }
         
         return streak
     }
-}
-
-struct UserStats {
-    let essayCount: Int
-    let streakDays: Int
-    let totalWords: Int
-}
-
-struct StreakBadgeView: View {
-    let days: Int
     
-    var body: some View {
-        VStack(spacing: 8) {
-            ZStack {
-                Circle()
-                    .fill(LinearGradient(
-                        colors: [.orange, .red],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ))
-                    .frame(width: 100, height: 100)
-                    .shadow(radius: 4)
-                
-                VStack(spacing: 2) {
-                    Image(systemName: "flame.fill")
-                        .font(.system(size: 32))
-                        .foregroundStyle(.white)
-                    
-                    Text("\(days)")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundStyle(.white)
+    private func loadEssayForDate(_ date: Date) async {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        
+        do {
+            // Get essays for the date range
+            let startOfDay = calendar.startOfDay(for: date)
+            guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else { return }
+            
+            let essays = try await FirebaseService.shared.getUserEssaysInDateRange(
+                userId: userId,
+                startDate: startOfDay,
+                endDate: endOfDay
+            )
+            
+            await MainActor.run {
+                if let essay = essays.first(where: { !$0.isDraft }) {
+                    selectedEssay = essay
+                    showingEssayDetail = true
+                } else if let draft = essays.first(where: { $0.isDraft }) {
+                    selectedEssay = draft
+                    showingEssayDetail = true
                 }
             }
-            
-            Text(days == 1 ? "Day Streak".localized : "Day Streak".localized)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+        } catch {
+            print("Error loading essay for date: \(error)")
         }
     }
 }
 
-struct MonthlyStreakView: View {
-    let activity: [Date: Bool]
-    let calendar = Calendar.current
-    @StateObject private var languageManager = LanguageManager.shared
+// MARK: - Monthly Calendar Grid
+
+struct DotCalendarGrid: View {
+    let writingDates: [Date]
+    let onDateTap: (Date) -> Void
+    private let calendar = Calendar.current
+    private let columns = Array(repeating: GridItem(.flexible()), count: 7)
     
-    private var last30Days: [Date] {
-        let today = calendar.startOfDay(for: Date())
-        var days: [Date] = []
-        for i in (0...29).reversed() {
-            if let date = calendar.date(byAdding: .day, value: -i, to: today) {
-                days.append(date)
+    var body: some View {
+        // Calendar grid - weekday headers are shown above this view
+        let days = getCurrentMonthDays()
+        LazyVGrid(columns: columns, spacing: 10) {
+            ForEach(days.indices, id: \.self) { index in
+                if let date = days[index] {
+                    DayDot(
+                        date: date,
+                        isWritten: hasWritten(on: date),
+                        isToday: calendar.isDateInToday(date),
+                        onTap: { onDateTap(date) }
+                    )
+                } else {
+                    // Empty slot
+                    DayDot(date: nil, isWritten: false, isToday: false, onTap: nil)
+                }
             }
         }
+    }
+    
+    private func getCurrentMonthDays() -> [Date?] {
+        var calendar = Calendar.current
+        calendar.firstWeekday = 1 // Sunday = 1
+        
+        let today = calendar.startOfDay(for: Date())
+        guard let monthInterval = calendar.dateInterval(of: .month, for: today) else { return [] }
+        
+        let firstDayOfMonth = monthInterval.start
+        let lastDayOfMonth = calendar.date(byAdding: .day, value: -1, to: monthInterval.end)!
+        
+        // Get the weekday of the first day (0 = Sunday, 1 = Monday, etc.)
+        let firstWeekday = calendar.component(.weekday, from: firstDayOfMonth) - 1
+        
+        var days: [Date?] = []
+        
+        // Add empty slots for days before the first of the month
+        for _ in 0..<firstWeekday {
+            days.append(nil)
+        }
+        
+        // Add all days of the month
+        var currentDate = firstDayOfMonth
+        while currentDate <= lastDayOfMonth {
+            days.append(currentDate)
+            guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else { break }
+            currentDate = nextDate
+        }
+        
+        // Pad to complete the grid (fill remaining slots in the last week)
+        let remainingSlots = (7 - (days.count % 7)) % 7
+        for _ in 0..<remainingSlots {
+            days.append(nil)
+        }
+        
         return days
     }
     
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Last 30 Days".localized)
-                .font(.headline)
-                .foregroundStyle(.primary)
-            
-            // Grid of 30 days (6 rows x 5 columns)
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 6), spacing: 4) {
-                ForEach(last30Days, id: \.self) { date in
-                    let dayStart = calendar.startOfDay(for: date)
-                    let hasActivity = activity.keys.contains { calendar.isDate($0, inSameDayAs: dayStart) }
-                    StreakDayCell(
-                        date: date,
-                        hasActivity: hasActivity,
-                        isToday: calendar.isDateInToday(date)
-                    )
-                }
-            }
-            
-            // Legend
-            HStack(spacing: 16) {
-                HStack(spacing: 4) {
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(Color.green.opacity(0.8))
-                        .frame(width: 12, height: 12)
-                    Text("Written".localized)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                
-                HStack(spacing: 4) {
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(Color.gray.opacity(0.2))
-                        .frame(width: 12, height: 12)
-                    Text("Missed".localized)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-        }
-        .padding()
-        .background(Color(.systemGray6))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+    private func hasWritten(on date: Date) -> Bool {
+        writingDates.contains { calendar.isDate($0, inSameDayAs: date) }
     }
 }
 
-struct StreakDayCell: View {
-    let date: Date
-    let hasActivity: Bool
+struct DayDot: View {
+    let date: Date?
+    let isWritten: Bool
     let isToday: Bool
-    let calendar = Calendar.current
+    
+    // Retro Sunset palette colors
+    private let submittedColor = Color(red: 0.027, green: 0.580, blue: 0.580) // #069494 teal
+    private let missedColor = Color(red: 0.718, green: 0.255, blue: 0.055)   // #B7410E burnt orange
+    private let futureColor = Color(.systemGray5) // Gray for future days
+    private let todayBorderColor = Color(red: 1.0, green: 0.808, blue: 0.106) // #FFCE1B golden yellow
+    
+    private var isPast: Bool {
+        guard let date = date else { return false }
+        return Calendar.current.compare(date, to: Date(), toGranularity: .day) == .orderedAscending
+    }
+    
+    private var onTap: (() -> Void)? = nil
+    
+    init(date: Date?, isWritten: Bool, isToday: Bool, onTap: (() -> Void)? = nil) {
+        self.date = date
+        self.isWritten = isWritten
+        self.isToday = isToday
+        self.onTap = onTap
+    }
     
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 4)
-                .fill(hasActivity ? Color.green.opacity(0.8) : Color.gray.opacity(0.2))
-                .frame(height: 28)
-            
-            if isToday {
-                RoundedRectangle(cornerRadius: 4)
-                    .stroke(Color.blue, lineWidth: 2)
-                    .frame(height: 28)
+        if let date = date {
+            ZStack {
+                // Background circle - teal for submitted, burnt orange for missed past days, gray for future
+                Circle()
+                    .fill(backgroundColor)
+                    .frame(width: 36, height: 36)
+                
+                // Golden yellow border for today
+                if isToday {
+                    Circle()
+                        .stroke(todayBorderColor, lineWidth: 3)
+                        .frame(width: 36, height: 36)
+                }
             }
+            .contentShape(Circle())
+            .onTapGesture {
+                if isWritten, let onTap = onTap {
+                    onTap()
+                }
+            }
+        } else {
+            // Empty slot
+            Circle()
+                .fill(Color.clear)
+                .frame(width: 36, height: 36)
         }
     }
-}
-
-struct StatView: View {
-    let value: String
-    let label: String
     
-    var body: some View {
-        VStack(spacing: 4) {
-            Text(value)
-                .font(.title2)
-                .fontWeight(.bold)
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+    private var backgroundColor: Color {
+        if isWritten {
+            return submittedColor
+        } else if isPast {
+            return missedColor
+        } else {
+            return futureColor
         }
     }
 }

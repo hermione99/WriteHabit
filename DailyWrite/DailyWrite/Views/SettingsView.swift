@@ -5,16 +5,16 @@ struct SettingsView: View {
     @StateObject private var languageManager = LanguageManager.shared
     @StateObject private var fontManager = FontManager.shared
     @Environment(\.dismiss) private var dismiss
-    @State private var showFontPicker = false
     @State private var showBackupSheet = false
     @State private var showNotificationSettings = false
     @State private var backupMessage = ""
     @State private var showBackupAlert = false
     @State private var showingDeleteAccountConfirmation = false
+    @State private var showingSignOutConfirmation = false
     @State private var showThemePicker = false
+    @State private var showAccentColorPicker = false
+    @State private var showRecentlyDeleted = false
     @StateObject private var themeManager = ThemeManager.shared
-    
-    let fonts: [AppFont] = AppFont.allCases
     
     var body: some View {
         NavigationStack {
@@ -40,15 +40,20 @@ struct SettingsView: View {
                     }
                     .foregroundStyle(.primary)
                     
-                    // Font button with chevron
+                    // Accent color picker
                     Button {
-                        showFontPicker = true
+                        showAccentColorPicker = true
                     } label: {
                         HStack {
-                            Text("Font".localized)
+                            Text("Accent Color".localized)
                             Spacer()
-                            Text(fontManager.currentFont.displayName)
-                                .foregroundStyle(.secondary)
+                            Circle()
+                                .fill(themeManager.accentColor.color)
+                                .frame(width: 24, height: 24)
+                                .overlay(
+                                    Circle()
+                                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                )
                             Image(systemName: "chevron.right")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
@@ -58,22 +63,7 @@ struct SettingsView: View {
                 }
                 
                 Section("Language".localized) {
-                    ForEach(AppLanguage.allCases) { language in
-                        Button {
-                            languageManager.selectLanguage(language)
-                        } label: {
-                            HStack {
-                                Text(language.flag)
-                                Text(language.displayName)
-                                Spacer()
-                                if languageManager.currentLanguage == language {
-                                    Image(systemName: "checkmark")
-                                        .foregroundStyle(.blue)
-                                }
-                            }
-                        }
-                        .foregroundStyle(.primary)
-                    }
+                    LanguageSectionContent()
                 }
                 
                 Section("Notifications".localized) {
@@ -103,7 +93,7 @@ struct SettingsView: View {
                     } label: {
                         HStack {
                             Image(systemName: "icloud")
-                                .foregroundStyle(.blue)
+                                .foregroundStyle(themeManager.accent)
                             Text("Backup to iCloud".localized)
                             Spacer()
                             Image(systemName: "chevron.right")
@@ -127,6 +117,21 @@ struct SettingsView: View {
                         }
                     }
                     .foregroundStyle(.primary)
+                    
+                    Button {
+                        showRecentlyDeleted = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "trash")
+                                .foregroundStyle(.orange)
+                            Text("Recently Deleted".localized)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .foregroundStyle(.primary)
                 }
                 
                 Section("About".localized) {
@@ -139,6 +144,19 @@ struct SettingsView: View {
                 }
                 
                 Section("Account".localized) {
+                    // Sign Out button
+                    Button {
+                        showingSignOutConfirmation = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "rectangle.portrait.and.arrow.right")
+                                .foregroundStyle(themeManager.accent)
+                            Text("Sign Out".localized)
+                                .foregroundStyle(themeManager.accent)
+                            Spacer()
+                        }
+                    }
+                    
                     Button {
                         showingDeleteAccountConfirmation = true
                     } label: {
@@ -152,6 +170,14 @@ struct SettingsView: View {
                     }
                 }
             }
+            .alert("Sign Out?".localized, isPresented: $showingSignOutConfirmation) {
+                Button("Cancel".localized, role: .cancel) { }
+                Button("Sign Out".localized, role: .destructive) {
+                    signOut()
+                }
+            } message: {
+                Text("Are you sure you want to sign out?".localized)
+            }
             .navigationTitle("Settings".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -160,9 +186,6 @@ struct SettingsView: View {
                         dismiss()
                     }
                 }
-            }
-            .sheet(isPresented: $showFontPicker) {
-                FontPickerSheet()
             }
             .sheet(isPresented: $showThemePicker) {
                 NavigationStack {
@@ -174,6 +197,14 @@ struct SettingsView: View {
             }
             .sheet(isPresented: $showNotificationSettings) {
                 NotificationSettingsView()
+            }
+            .sheet(isPresented: $showRecentlyDeleted) {
+                RecentlyDeletedView()
+            }
+            .sheet(isPresented: $showAccentColorPicker) {
+                NavigationStack {
+                    AccentColorPickerView()
+                }
             }
             .alert("Backup".localized, isPresented: $showBackupAlert) {
                 Button("OK".localized, role: .cancel) { }
@@ -252,76 +283,19 @@ struct SettingsView: View {
             showBackupAlert = true
         }
     }
-}
-
-// Simple font picker sheet
-struct FontPickerSheet: View {
-    @StateObject private var fontManager = FontManager.shared
-    @Environment(\.dismiss) private var dismiss
     
-    let fonts: [AppFont] = AppFont.allCases
-    
-    var body: some View {
-        NavigationStack {
-            List {
-                Section("Preview".localized) {
-                    Text("The quick brown fox jumps over the lazy dog.")
-                        .font(fontManager.currentFont.font(size: fontManager.writingFontSize))
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding()
-                }
-                
-                Section("Font Size".localized) {
-                    HStack {
-                        Text("A")
-                            .font(.caption)
-                        Slider(value: $fontManager.writingFontSize, in: 14...32, step: 1)
-                            .onChange(of: fontManager.writingFontSize) {
-                                fontManager.setFontSize(fontManager.writingFontSize)
-                            }
-                        Text("A")
-                            .font(.title2)
-                    }
-                    
-                    HStack {
-                        Spacer()
-                        Text("\(Int(fontManager.writingFontSize))pt")
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                    }
-                }
-                
-                Section("Fonts".localized) {
-                    ForEach(fonts) { font in
-                        Button {
-                            fontManager.setFont(font)
-                        } label: {
-                            HStack {
-                                Text(font.displayName)
-                                    .font(font.font(size: 16))
-                                Spacer()
-                                if fontManager.currentFont == font {
-                                    Image(systemName: "checkmark")
-                                        .foregroundStyle(.blue)
-                                }
-                            }
-                        }
-                        .foregroundStyle(.primary)
-                    }
-                }
-            }
-            .navigationTitle("Choose Font".localized)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done".localized) {
-                        dismiss()
-                    }
-                }
-            }
+    private func signOut() {
+        do {
+            try Auth.auth().signOut()
+            // Dismiss settings
+            dismiss()
+        } catch {
+            backupMessage = "Failed to sign out: \(error.localizedDescription)".localized
+            showBackupAlert = true
         }
     }
 }
+
 
 #Preview {
     SettingsView()
@@ -331,6 +305,7 @@ struct FontPickerSheet: View {
 
 struct BackupSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var themeManager = ThemeManager.shared
     @State private var isExporting = false
     @State private var showShareSheet = false
     @State private var exportURL: URL?
@@ -355,7 +330,7 @@ struct BackupSheet: View {
                                 Spacer()
                                 if exportFormat == format {
                                     Image(systemName: "checkmark")
-                                        .foregroundStyle(.blue)
+                                        .foregroundStyle(themeManager.accent)
                                 }
                             }
                         }
@@ -486,6 +461,44 @@ struct BackupSheet: View {
     }
 }
 
+// MARK: - Language Row Component
+struct LanguageRow: View {
+    let language: AppLanguage
+    let isSelected: Bool
+    @StateObject private var themeManager = ThemeManager.shared
+    
+    var body: some View {
+        HStack {
+            Text(language.flag)
+            Text(language.displayName)
+            Spacer()
+            if isSelected {
+                Image(systemName: "checkmark")
+                    .foregroundStyle(themeManager.accent)
+            }
+        }
+        .foregroundStyle(.primary)
+    }
+}
+
+// MARK: - Language Section Content
+struct LanguageSectionContent: View {
+    @StateObject private var languageManager = LanguageManager.shared
+    
+    var body: some View {
+        ForEach(AppLanguage.allCases) { language in
+            Button {
+                languageManager.selectLanguage(language)
+            } label: {
+                LanguageRow(
+                    language: language,
+                    isSelected: languageManager.currentLanguage == language
+                )
+            }
+        }
+    }
+}
+
 // Localization strings needed:
 // "Backup & Export" = "Backup & Export"
 // "Backup to iCloud" = "Backup to iCloud"
@@ -500,3 +513,105 @@ struct BackupSheet: View {
 // "Plain Text" = "Plain Text"
 // "Export %@ Essays" = "Export %@ Essays"
 // "Export your essays as a file you can save to Files, iCloud Drive, Google Drive, or share with others." = "Export your essays as a file you can save to Files, iCloud Drive, Google Drive, or share with others."
+
+// MARK: - Accent Color Picker (Moved from separate file)
+struct AccentColorPickerView: View {
+    @StateObject private var themeManager = ThemeManager.shared
+    @Environment(\.dismiss) private var dismiss
+    
+    let columns = [
+        GridItem(.adaptive(minimum: 70), spacing: 16)
+    ]
+    
+    var body: some View {
+        List {
+            Section("Preview".localized) {
+                VStack(spacing: 20) {
+                    // Sample UI showing accent color
+                    HStack(spacing: 12) {
+                        Image(systemName: "heart.fill")
+                            .foregroundStyle(themeManager.accentColor.color)
+                        Text("Sample Button")
+                            .fontWeight(.medium)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+                    .background(themeManager.accentColor.color.opacity(0.15))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    
+                    HStack(spacing: 8) {
+                        Circle()
+                            .fill(themeManager.accentColor.color)
+                            .frame(width: 12, height: 12)
+                        Text("Active Indicator")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 20)
+            }
+            
+            Section("Choose Color".localized) {
+                LazyVGrid(columns: columns, spacing: 20) {
+                    ForEach(AppAccentColor.allCases) { accent in
+                        ColorOption(
+                            color: accent.color,
+                            isSelected: themeManager.accentColor == accent,
+                            displayName: accent.displayName
+                        )
+                        .onTapGesture {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                themeManager.setAccentColor(accent)
+                            }
+                        }
+                    }
+                }
+                .padding(.vertical, 8)
+            }
+        }
+        .navigationTitle("Accent Color".localized)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Done".localized) {
+                    dismiss()
+                }
+            }
+        }
+    }
+}
+
+struct ColorOption: View {
+    let color: Color
+    let isSelected: Bool
+    let displayName: String
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            ZStack {
+                Circle()
+                    .fill(color)
+                    .frame(width: 56, height: 56)
+                
+                if isSelected {
+                    Circle()
+                        .stroke(Color.white, lineWidth: 3)
+                        .frame(width: 56, height: 56)
+                    
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+            }
+            .overlay(
+                Circle()
+                    .stroke(isSelected ? color.opacity(0.5) : Color.gray.opacity(0.3), lineWidth: isSelected ? 3 : 1)
+            )
+            
+            Text(displayName.localized)
+                .font(.caption)
+                .foregroundStyle(isSelected ? .primary : .secondary)
+        }
+    }
+}

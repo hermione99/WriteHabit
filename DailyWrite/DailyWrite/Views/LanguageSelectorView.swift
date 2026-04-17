@@ -3,6 +3,7 @@ import SwiftUI
 struct LanguageSelectorView: View {
     @StateObject private var languageManager = LanguageManager.shared
     @Binding var showLanguageSelector: Bool
+    @StateObject private var themeManager = ThemeManager.shared
     @State private var selectedLanguage: AppLanguage = .korean
     
     var body: some View {
@@ -17,7 +18,7 @@ struct LanguageSelectorView: View {
                 VStack(spacing: 16) {
                     Image(systemName: "pencil.circle.fill")
                         .font(.system(size: 80))
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(themeManager.accent)
                     
                     Text("DailyWrite")
                         .font(.largeTitle)
@@ -56,7 +57,7 @@ struct LanguageSelectorView: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.blue)
+                        .background(themeManager.accent)
                         .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
                 .padding(.horizontal, 40)
@@ -74,6 +75,7 @@ struct LanguageOptionButton: View {
     let language: AppLanguage
     let isSelected: Bool
     let action: () -> Void
+    @StateObject private var themeManager = ThemeManager.shared
     
     var body: some View {
         Button(action: action) {
@@ -89,7 +91,7 @@ struct LanguageOptionButton: View {
                 
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(themeManager.accent)
                         .font(.title3)
                 } else {
                     Circle()
@@ -98,10 +100,10 @@ struct LanguageOptionButton: View {
                 }
             }
             .padding()
-            .background(isSelected ? Color.blue.opacity(0.1) : Color(.systemGray6))
+            .background(isSelected ? themeManager.accent.opacity(0.1) : Color(.systemGray6))
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
+                    .stroke(isSelected ? themeManager.accent : Color.clear, lineWidth: 2)
             )
             .clipShape(RoundedRectangle(cornerRadius: 12))
         }

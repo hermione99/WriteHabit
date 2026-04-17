@@ -2,6 +2,7 @@ import SwiftUI
 
 struct FontListView: View {
     @StateObject private var fontManager = FontManager.shared
+    @StateObject private var themeManager = ThemeManager.shared
     @Environment(\.dismiss) private var dismiss
     
     let fonts: [AppFont] = AppFont.allCases
@@ -23,7 +24,7 @@ struct FontListView: View {
                         
                         if fontManager.currentFont == font {
                             Image(systemName: "checkmark")
-                                .foregroundStyle(.blue)
+                                .foregroundStyle(themeManager.accent)
                         }
                     }
                     .contentShape(Rectangle())

@@ -18,6 +18,19 @@
 "Yes" = "예";
 "No" = "아니오";
 
+/* Photo Change Alert */
+"Photo Changed" = "사진 변경됨";
+"Your profile photo has been updated. Tap 'Save Changes' to confirm." = "프로필 사진이 업데이트되었습니다. '변경사항 저장'을 탭하여 확인하세요.";
+
+/* Comment Thread */
+"Hide replies" = "답글 숨기기";
+"Show replies" = "답글 보기";
+"Share your mind..." = "생각을 공유하세요...";
+"Write a reply..." = "답글을 작성하세요...";
+"Replying to" = "답글 대상";
+"replying_to" = "답장 중:";
+"Most Recent" = "최신순";
+
 /* Tab Navigation */
 "Feed" = "피드";
 "Profile" = "프로필";
@@ -38,168 +51,195 @@
 
 /* Daily Prompt */
 "Today's Keyword" = "오늘의 키워드";
+"Write your thoughts..." = "당신의 생각을 적어보세요...";
 "Start Writing" = "글쓰기 시작";
-"Day Streak" = "연속 일수";
-"Words Written" = "작성한 단어";
-"Published" = "게시한 글";
-"words" = "자";
+"Continue Writing" = "이어서 쓰기";
+"Edit Draft" = "임시저장 수정";
+"Write Now" = "지금 쓰기";
+"Write" = "쓰기";
+"Writing" = "글쓰기";
+"Past Prompt" = "지난 키워드";
+"Tomorrow" = "내일";
+"Days Streak" = "일 연속";
+"Day" = "일";
 
-/* Writing Editor */
-"Prompt: %@" = "주제: %@";
-"Title (optional)" = "제목 (선택사항)";
-"Start writing about '%@'..." = "'%@'에 대해 작성을 시작하세요...";;
-"Make public" = "공개하기";
-"Save Draft" = "임시 저장";
-"Publish" = "게시하기";
-"Publish Essay?" = "글을 게시하시겠습니까?";
-"Your essay will be visible to others in the feed." = "작성한 글이 피드에 공개됩니다.";
-"Your essay will be saved privately." = "작성한 글이 비공개로 저장됩니다.";
+/* Essay */
+"Essay" = "글";
+"Essays" = "글 목록";
+"All Essays" = "모든 글";
+"Published" = "발행됨";
+"Draft" = "임시저장";
+"Edit" = "수정";
+"Delete" = "삭제";
+"Publish" = "발행";
+"Unpublish" = "발행 취소";
+"Published Essays" = "발행된 글";
+"Draft Essays" = "임시저장 글";
+"No essays yet" = "아직 작성한 글이 없습니다";
+"Words" = "단어";
+"characters" = "자";
+"Your Essays" = "내 글";
+"Word Count" = "글자 수";
+"Written on" = "작성일";
+"Visibility" = "공개 설정";
+"Already Written" = "이미 작성됨";
+"Edit Existing" = "기존 글 수정";
+"You already wrote an essay for this keyword." = "이미 이 주제에 대해 작성하셨습니다.";
 
-/* Feed */
-"Following" = "팔로잉";
-"Discover" = "탐색";
-"Trending" = "인기";
+/* Comments */
 "Comments" = "댓글";
 "Add a comment..." = "댓글을 입력하세요...";
-"Post" = "게시";
-"Likes" = "좋아요";
+"Reply" = "답글";
+"Replying to" = "답글 대상";
+"Cancel Reply" = "답글 취소";
+"Delete Comment" = "댓글 삭제";
 "Like" = "좋아요";
-"Unlike" = "좋아요 취소";
+"Likes" = "좋아요";
+"No comments yet" = "아직 댓글이 없습니다";
+"Be the first to comment" = "첫 댓글을 남겨보세요";
 
 /* Profile */
-"Your Essays" = "내 글";
-"See All" = "전체보기";
-"Essays" = "글";
-"Followers" = "팔로워";
-"Following" = "팔로잉";
-"Edit Profile" = "프로필 편집";
-"Anonymous" = "익명";
-"Untitled" = "제목 없음";
-"Writer" = "작가";
-"Filter" = "필터";
-"Prompt" = "주제";
-"Daily writer exploring thoughts one prompt at a time." = "매일 주제를 받아 생각을 기록하는 작가입니다.";
-
-/* Profile Editing */
-"Profile Info" = "프로필 정보";
+"Edit Profile" = "프로필 수정";
 "Display Name" = "표시 이름";
-"Bio" = "소개";
 "Username" = "사용자명";
-"Save Changes" = "변경사항 저장";
-"Save Changes?" = "변경사항을 저장하시겠습니까?";
-"Enter display name" = "표시 이름 입력";
-"Enter bio" = "소개 입력";
-"Tell us about yourself" = "자신을 소개해주세요";
-"Profile updated" = "프로필이 업데이트되었습니다";
-"Failed to update profile" = "프로필 업데이트 실패";
-
-/* All Essays */
-"All Essays" = "전체 글";
-"No essays yet" = "아직 작성한 글이 없습니다";
-"Start writing to see your essays here" = "글을 작성하면 여기에 표시됩니다";
-"Essay" = "글";
-
-/* Archive */
-"Writing Archive" = "글 보관함";
-"No essays on this day" = "이 날 작성한 글이 없습니다";
-"Write now" = "지금 쓰기";
-
-/* Settings */
-"Appearance" = "외형";
-"Font" = "글꼴";
-"Font Size" = "글꼴 크기";
-"Preview" = "미리보기";
-"Language" = "언어";
-"About" = "정보";
-"Version" = "버전";
-
-/* Font Picker */
-"Choose Font" = "글꼴 선택";
-"English Fonts" = "영문 글꼴";
-"Korean Fonts" = "한글 글꼴";
-
-/* Language Selector */
-"Select Language" = "언어 선택";
-"Choose your preferred language" = "원하는 언어를 선택하세요";
-"You can change this later in settings" = "설정에서 나중에 변경할 수 있습니다";
-
-/* Username Setup */
-"Choose Your Writing Name" = "작가명을 선택하세요";
-"This will be your unique identity on DailyWrite" = "DailyWrite에서 사용할 고유한 이름입니다";
-"Your Name" = "이름";
-"username" = "사용자이름";
-"3-20 characters" = "3-20자";
-"Letters, numbers, underscores only" = "영문, 숫자, 밑줄만 가능";
-"is available!" = "사용 가능합니다!";
-"is already taken. Try another." = "이미 사용 중입니다. 다른 이름을 선택하세요.";
-"Unable to check availability. Please try again." = "확인할 수 없습니다. 다시 시도하세요.";
-"Check Availability" = "사용 가능 확인";
-"Failed to create profile. Please try again." = "프로필 생성에 실패했습니다. 다시 시도하세요.";
-
-/* Grammar & Spell Check */
-"Check Spelling" = "맞춤법 검사";
-"No spelling issues found!" = "맞춤법 문제가 없습니다!";
-"No suggestions" = "제안 없음";
-"Found %@ issues" = "%@개의 문제 발견";
-"Spelling Check" = "맞춤법 검사";
-
-/* AI Keywords */
-"AI Keywords" = "AI 키워드";
-"Generate New Keywords" = "새 키워드 생성";
-"Generating..." = "생성 중...";
-"Keywords refreshed!" = "키워드가 업데이트되었습니다!";
+"Bio" = "소개";
+"Links" = "링크";
+"Blog" = "블로그";
+"Instagram" = "인스타그램";
+"Twitter" = "트위터";
+"Threads" = "스레드";
+"Following" = "팔로우 중";
+"Follow" = "팔로우";
+"Unfollow" = "팔로우 취소";
+"Friends" = "친구";
+"Followers" = "팔로워";
+"Following Count" = "팔로잉";
+"Friends Count" = "친구";
 
 /* Notifications */
 "Notifications" = "알림";
-"Daily Reminder" = "일일 알림";
-"Enable Daily Reminder" = "일일 알림 켜기";
-"Receive a daily notification to remind you to write." = "매일 글쓰기 시간을 알려드립니다.";
-"Reminder Time" = "알림 시간";
-"Time" = "시간";
-"Send Test Notification" = "테스트 알림 보내기";
-"Open Settings to Enable Notifications" = "설정에서 알림 켜기";
-"Permission Required" = "권한 필요";
-"Please enable notifications in Settings to receive daily reminders." = "일일 알림을 받으려면 설정에서 알림을 켜주세요.";
-"On" = "켜짐";
-"Off" = "꺼짐";
+"No notifications yet" = "아직 알림이 없습니다";
+"Mark as Read" = "읽음 표시";
+"Clear All" = "모두 지우기";
+"New Comment" = "새 댓글";
+"New Reply" = "새 답글";
+"commented on your essay" = "님이 회원님의 글에 댓글을 남겼습니다";
+"%@ commented on your essay" = "%@님이 회원님의 글에 댓글을 남겼습니다";
+"replied to your comment" = "님이 회원님의 댓글에 답글을 남겼습니다";
+"liked your essay" = "님이 회원님의 글을 좋아합니다";
+"liked your comment" = "님이 회원님의 댓글을 좋아합니다";
+"sent you a friend request" = "님이 친구 요청을 보냈습니다";
+"accepted your friend request" = "님이 친구 요청을 수락했습니다";
+"started following you" = "님이 회원님을 팔로우하기 시작했습니다";
+"%@ replied to your comment" = "%@님이 회원님의 댓글에 답글을 남겼습니다";
+"%@ commented on your essay" = "%@님이 회원님의 글에 댓글을 남겼습니다";
+"days ago" = "일 전";
+"hours ago" = "시간 전";
+"minutes ago" = "분 전";
+"just now" = "방금";
 
-/* Headings */
-"Heading" = "제목";
-"Subheading" = "머리말";
-"Sub-subheading" = "부머리말";
-"Body" = "본문";
+/* Settings */
+"Account" = "계정";
+"Appearance" = "외관";
+"Language" = "언어";
+"Notifications" = "알림";
+"About" = "정보";
+"Theme" = "테마";
+"Accent Color" = "강조색";
+"Dark Mode" = "다크 모드";
+"Light Mode" = "라이트 모드";
+"System" = "시스템";
+"Font" = "글꼴";
+"Font Size" = "글자 크기";
+"Line Spacing" = "줄 간격";
+"Auto" = "자동";
+"Manual" = "수동";
+"Small" = "작게";
+"Medium" = "중간";
+"Large" = "크게";
+"Version" = "버전";
 
-/* Backup */
-"Backup" = "백업";
-"Please sign in first" = "먼저 로그인해주세요";
-"iCloud not available. Please check Settings > iCloud." = "iCloud를 사용할 수 없습니다. 설정 > iCloud를 확인해주세요.";
-"Successfully backed up %@ essays to iCloud!" = "%@개의 글을 iCloud에 백업했습니다!";
-"Backup failed: %@" = "백업 실패: %@";
-"Export Format" = "내보내기 형식";
-"Export %@ Essays" = "%@개의 글 내보내기";
-"JSON (Structured Data)" = "JSON (구조화된 데이터)";
-"Markdown (Readable)" = "Markdown (읽기 쉬움)";
-"Plain Text" = "일반 텍스트";
-"Export your essays as a file you can save to Files, iCloud Drive, Google Drive, or share with others." = "파일로 내보내어 파일 앱, iCloud Drive, Google Drive에 저장하거나 다른 사람과 공유할 수 있습니다.";
+/* Archive */
+"Archive" = "보관함";
+"Writing Archive" = "글 보관함";
+"Keyword Archive" = "키워드 보관함";
+"See All" = "전체보기";
 
-/* Settings Sections */
-"Backup & Export" = "백업 및 내보내기";
-"Backup to iCloud" = "iCloud에 백업";
-"Export Essays" = "글 내보내기";
+/* Challenges */
+"Challenges" = "도전";
+"Writing Challenges" = "글쓰기 도전";
+"Current Challenge" = "현재 도전";
+"Completed" = "완료";
+"In Progress" = "진행 중";
+"Start Challenge" = "도전 시작";
+"Join Challenge" = "도전 참여";
+"Challenge Progress" = "도전 진행도";
+"Days Completed" = "완료한 일수";
+"Days Remaining" = "남은 일수";
 
-/* Drafts */
-"No Drafts" = "임시저장된 글 없음";
-"Start writing to save drafts" = "글을 작성하면 임시저장할 수 있습니다";
-"Edit Draft" = "임시저장 글 수정";
-"Save Changes" = "변경사항 저장";
-"Keyword" = "키워드";
-"Draft" = "임시저장";
+/* Friends */
+"Add Friend" = "친구 추가";
+"Friend Request" = "친구 요청";
+"Friend Requests" = "친구 요청";
+"Pending Requests" = "대기 중인 요청";
+"Search Friends" = "친구 검색";
+"Search users..." = "사용자 검색...";
+"No users found" = "사용자를 찾을 수 없습니다";
+"Send Request" = "요청 보내기";
+"Accept" = "수락";
+"Decline" = "거절";
+"Remove" = "제거";
+"Remove Friend" = "친구 삭제";
+"Remove Friend?" = "친구를 삭제하시겠습니까?";
+"Request Sent" = "요청 전송됨";
+"Friends since" = "친구 시작일";
+"No friends yet" = "아직 친구가 없습니다";
+"Add your first friend" = "첫 친구를 추가해보세요";
 
-/* Font Picker */
+/* Book Export */
+"Create Book" = "책 만들기";
+"Export" = "내보내기";
+"Book Title" = "책 제목";
+"Subtitle" = "부제목";
+"Author Name" = "저자명";
+"Cover Image" = "표지 이미지";
+"Select Essays" = "글 선택";
+"Export as PDF" = "PDF로 내보내기";
+"Export as EPUB" = "EPUB으로 내보내기";
+"Download" = "다운로드";
+"Share" = "공유";
 "Preview" = "미리보기";
-"Font Size" = "글꼴 크기";
-"Fonts" = "글꼴";
-"Choose Font" = "글꼴 선택";
+"Page" = "페이지";
+"of" = "/";
+
+/* Format Menu */
+"Format" = "서식";
+"Text Style" = "글자 스타일";
+"Bold" = "굵게";
+"Italic" = "기울임";
+"Underline" = "밑줄";
+"Strikethrough" = "취소선";
+"Size" = "크기";
+"Paragraph" = "문단";
+"Headings" = "제목";
+"Heading" = "제목";
+"Subheading" = "부제목";
+"Sub-subheading" = "소제목";
+"Divider" = "구분선";
+
+/* Text Alignment */
+"Alignment" = "정렬";
+"Left" = "좌측 정렬";
+"Center" = "가운데 정렬";
+"Right" = "우측 정렬";
+
+/* Essay Visibility */
+"Private" = "비공개";
+"Friends Only" = "친구 공개";
+"Public" = "전체 공개";
+"Only you can see this" = "나만 볼 수 있습니다";
+"Only your friends can see this" = "친구만 볼 수 있습니다";
+"Everyone can see this" = "모두가 볼 수 있습니다";
 
 /* Monthly Streak */
 "Last 30 Days" = "최근 30일";

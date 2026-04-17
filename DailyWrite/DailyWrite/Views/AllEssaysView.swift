@@ -4,39 +4,12 @@ import FirebaseAuth
 struct AllEssaysView: View {
     @State private var essays: [Essay] = []
     @State private var isLoading = true
-    @State private var selectedFilter: EssayFilter = .published
+    @StateObject private var themeManager = ThemeManager.shared
     @Environment(\.dismiss) private var dismiss
-    
-    enum EssayFilter: String, CaseIterable {
-        case published = "Published"
-        case drafts = "Drafts"
-        
-        var localized: String {
-            switch self {
-            case .published: return "Published".localized
-            case .drafts: return "Drafts".localized
-            }
-        }
-    }
     
     var body: some View {
         NavigationStack {
             List {
-                // Filter segment
-                Picker("Filter", selection: $selectedFilter) {
-                    ForEach(EssayFilter.allCases, id: \.self) { filter in
-                        Text(filter.localized).tag(filter)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal)
-                .padding(.top, 8)
-                .onChange(of: selectedFilter) { _ in
-                    Task {
-                        await loadEssays()
-                    }
-                }
-                
                 if isLoading {
                     ProgressView()
                         .frame(maxWidth: .infinity)
@@ -90,12 +63,8 @@ struct AllEssaysView: View {
         isLoading = true
         
         do {
-            switch selectedFilter {
-            case .published:
-                essays = try await FirebaseService.shared.getUserEssays(userId: user.uid)
-            case .drafts:
-                essays = try await FirebaseService.shared.getUserDrafts(userId: user.uid)
-            }
+            // Only fetch published essays (no drafts filter needed)
+            essays = try await FirebaseService.shared.getUserEssays(userId: user.uid)
         } catch {
             print("Error loading essays: \(error)")
         }
@@ -106,6 +75,7 @@ struct AllEssaysView: View {
 
 struct EssayListRow: View {
     let essay: Essay
+    @StateObject private var themeManager = ThemeManager.shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -145,7 +115,7 @@ struct EssayListRow: View {
                 if essay.isPublic {
                     Image(systemName: "globe")
                         .font(.caption)
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(themeManager.accent)
                 } else {
                     Image(systemName: "lock.fill")
                         .font(.caption)
@@ -181,7 +151,7 @@ struct EssayListRow: View {
                 HStack(spacing: 4) {
                     Image(systemName: "message.fill")
                         .font(.caption)
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(themeManager.accent)
                     Text("\(essay.commentsCount)")
                         .font(.caption)
                         .foregroundStyle(.secondary)

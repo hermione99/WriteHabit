@@ -17,9 +17,16 @@ struct DailyWriteApp: App {
         WindowGroup {
             ContentView()
                 .preferredColorScheme(themeManager.currentTheme.colorScheme)
+                .tint(themeManager.accent)  // Set app-wide accent color
+                .accentColor(themeManager.accent)  // Fallback for older APIs
                 .onAppear {
                     // Initialize notification service (UNUserNotificationCenter delegate)
                     _ = NotificationService.shared
+                    
+                    // Request notification permission for friend requests
+                    Task {
+                        _ = await NotificationService.shared.requestAuthorization()
+                    }
                 }
         }
     }

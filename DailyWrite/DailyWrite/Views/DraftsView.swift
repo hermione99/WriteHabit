@@ -67,8 +67,14 @@ struct DraftsView: View {
                     }
                 }
             }
+            .id(UUID()) // Force refresh when view appears
             .task {
                 await loadDrafts()
+            }
+            .onAppear {
+                Task {
+                    await loadDrafts()
+                }
             }
         }
     }
@@ -85,6 +91,14 @@ struct DraftsView: View {
         do {
             drafts = try await FirebaseService.shared.getUserDrafts(userId: userId)
             print("Loaded \(drafts.count) drafts")
+            // Check for nil IDs
+            let nilIds = drafts.filter { $0.id == nil }.count
+            if nilIds > 0 {
+                print("[WARNING] \(nilIds) drafts have nil ID!")
+            }
+            for (index, draft) in drafts.enumerated() {
+                print("[DEBUG] Draft \(index): id=\(draft.id ?? "nil"), title=\(draft.title), keyword=\(draft.keyword), content=\(draft.content.prefix(30))...")
+            }
             isLoading = false
         } catch {
             print("Error loading drafts: \(error)")
@@ -94,6 +108,25 @@ struct DraftsView: View {
     }
     
     private func deleteDraft(at offsets: IndexSet) {
-        // TODO: Implement delete
+        Task {
+            do {
+                // Get the drafts to delete
+                let draftsToDelete = offsets.map { drafts[$0] }
+                
+                // Delete from Firebase
+                for draft in draftsToDelete {
+                    if let essayId = draft.id {
+                        try await FirebaseService.shared.deleteEssay(essayId: essayId)
+                    }
+                }
+                
+                // Remove from local array
+                drafts.remove(atOffsets: offsets)
+                
+            } catch {
+                print("Error deleting draft: \(error)")
+                errorMessage = error.localizedDescription
+            }
+        }
     }
 }

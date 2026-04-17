@@ -3,6 +3,7 @@ import Charts
 import FirebaseAuth
 
 struct WritingAnalyticsView: View {
+    @StateObject private var themeManager = ThemeManager.shared
     @State private var essays: [Essay] = []
     @State private var selectedTimeRange: TimeRange = .month
     @State private var isLoading = true
@@ -286,6 +287,7 @@ struct DayBar: View {
     let date: Date
     let count: Int
     let isToday: Bool
+    @StateObject private var themeManager = ThemeManager.shared
     
     var body: some View {
         VStack(spacing: 4) {
@@ -295,7 +297,7 @@ struct DayBar: View {
             
             Text(dayLabel)
                 .font(.system(size: 8))
-                .foregroundStyle(isToday ? .blue : .secondary)
+                .foregroundStyle(isToday ? themeManager.accent : .secondary)
         }
     }
     
@@ -307,8 +309,8 @@ struct DayBar: View {
     
     func colorForCount(_ count: Int) -> Color {
         if count == 0 { return Color.gray.opacity(0.3) }
-        if count == 1 { return Color.blue.opacity(0.6) }
-        return Color.blue
+        if count == 1 { return themeManager.accent.opacity(0.6) }
+        return themeManager.accent
     }
 }
 
@@ -357,6 +359,7 @@ struct WeeklyPatternView: View {
 struct DayIndicator: View {
     let day: String
     let count: Int
+    @StateObject private var themeManager = ThemeManager.shared
     
     var body: some View {
         VStack(spacing: 6) {
@@ -365,7 +368,7 @@ struct DayIndicator: View {
                 .foregroundStyle(count > 0 ? .primary : .secondary)
             
             Circle()
-                .fill(count > 0 ? Color.blue.opacity(min(Double(count) * 0.2 + 0.3, 1.0)) : Color.gray.opacity(0.2))
+                .fill(count > 0 ? themeManager.accent.opacity(min(Double(count) * 0.2 + 0.3, 1.0)) : Color.gray.opacity(0.2))
                 .frame(width: 32, height: 32)
                 .overlay {
                     if count > 0 {

@@ -1,6 +1,8 @@
 import SwiftUI
 import UIKit
 
+// Font update: Added KoPub, Pretendard, Ridi fonts - 2026-04-14
+
 enum AppFont: String, CaseIterable, Identifiable {
     case system = "System"
     case serif = "Serif"
@@ -13,6 +15,10 @@ enum AppFont: String, CaseIterable, Identifiable {
     case appleSDGothic = "Apple SD Gothic Neo"
     case nanumMyeongjo = "Nanum Myeongjo"
     case nanumGothic = "Nanum Gothic"
+    case koPubBatang = "KoPub Batang"
+    case koPubDotum = "KoPub Dotum"
+    case pretendard = "Pretendard"
+    case ridiBatang = "Ridi Batang"
     
     var id: String { rawValue }
     
@@ -27,12 +33,16 @@ enum AppFont: String, CaseIterable, Identifiable {
         case .appleSDGothic: return "Apple SD Gothic Neo"
         case .nanumMyeongjo: return "Nanum Myeongjo"
         case .nanumGothic: return "Nanum Gothic"
+        case .koPubBatang: return "KoPub Batang"
+        case .koPubDotum: return "KoPub Dotum"
+        case .pretendard: return "Pretendard"
+        case .ridiBatang: return "Ridi Batang"
         }
     }
     
     var isKoreanFont: Bool {
         switch self {
-        case .appleSDGothic, .nanumMyeongjo, .nanumGothic:
+        case .appleSDGothic, .nanumMyeongjo, .nanumGothic, .koPubBatang, .koPubDotum, .pretendard, .ridiBatang:
             return true
         default:
             return false
@@ -56,9 +66,54 @@ enum AppFont: String, CaseIterable, Identifiable {
         case .appleSDGothic:
             return .custom("AppleSDGothicNeo-Regular", size: 17)
         case .nanumMyeongjo:
-            return .custom("NanumMyeongjo", size: 17)
+            // Actual PostScript name: NanumMyeongjo
+            if UIFont(name: "NanumMyeongjo", size: 17) != nil {
+                return .custom("NanumMyeongjo", size: 17)
+            } else {
+                return .system(.body, design: .serif)
+            }
         case .nanumGothic:
-            return .custom("NanumGothic", size: 17)
+            // Actual PostScript name: NanumGothic
+            if UIFont(name: "NanumGothic", size: 17) != nil {
+                return .custom("NanumGothic", size: 17)
+            } else {
+                return .system(.body)
+            }
+        case .koPubBatang:
+            // Actual PostScript name from font file: KoPubWorldBatangPM
+            if UIFont(name: "KoPubWorldBatangPM", size: 17) != nil {
+                return .custom("KoPubWorldBatangPM", size: 17)
+            } else if UIFont(name: "KoPubWorldBatang_Pro Medium", size: 17) != nil {
+                return .custom("KoPubWorldBatang_Pro Medium", size: 17)
+            } else {
+                return .custom("KoPubWorldBatangPM", size: 17)
+            }
+        case .koPubDotum:
+            // Actual PostScript name: KoPubWorldDotumPM
+            if UIFont(name: "KoPubWorldDotumPM", size: 17) != nil {
+                return .custom("KoPubWorldDotumPM", size: 17)
+            } else if UIFont(name: "KoPubWorldDotum_Pro Medium", size: 17) != nil {
+                return .custom("KoPubWorldDotum_Pro Medium", size: 17)
+            } else {
+                return .custom("KoPubWorldDotumPM", size: 17)
+            }
+        case .pretendard:
+            if UIFont(name: "Pretendard-Regular", size: 17) != nil {
+                return .custom("Pretendard-Regular", size: 17)
+            } else if UIFont(name: "PretendardRegular", size: 17) != nil {
+                return .custom("PretendardRegular", size: 17)
+            } else {
+                return .custom("Pretendard-Regular", size: 17)
+            }
+        case .ridiBatang:
+            // Actual PostScript name: RIDIBatangRegular
+            if UIFont(name: "RIDIBatangRegular", size: 17) != nil {
+                return .custom("RIDIBatangRegular", size: 17)
+            } else if UIFont(name: "RIDIBatang", size: 17) != nil {
+                return .custom("RIDIBatang", size: 17)
+            } else {
+                return .custom("RIDIBatangRegular", size: 17)
+            }
         }
     }
     
@@ -79,9 +134,32 @@ enum AppFont: String, CaseIterable, Identifiable {
         case .appleSDGothic:
             return UIFont(name: "AppleSDGothicNeo-Regular", size: size) ?? UIFont.systemFont(ofSize: size)
         case .nanumMyeongjo:
-            return UIFont(name: "NanumMyeongjo", size: size) ?? UIFont.systemFont(ofSize: size)
+            // Actual PostScript name: NanumMyeongjo
+            return UIFont(name: "NanumMyeongjo", size: size)
+                ?? UIFont.systemFont(ofSize: size)
         case .nanumGothic:
-            return UIFont(name: "NanumGothic", size: size) ?? UIFont.systemFont(ofSize: size)
+            // Actual PostScript name: NanumGothic
+            return UIFont(name: "NanumGothic", size: size)
+                ?? UIFont.systemFont(ofSize: size)
+        case .koPubBatang:
+            // Actual PostScript name from font file: KoPubWorldBatangPM (KoPubWorldBatang_Pro Medium)
+            return UIFont(name: "KoPubWorldBatangPM", size: size)
+                ?? UIFont(name: "KoPubWorldBatang_Pro Medium", size: size)
+                ?? UIFont.systemFont(ofSize: size)
+        case .koPubDotum:
+            // Actual PostScript name: KoPubWorldDotumPM (KoPubWorldDotum_Pro Medium)
+            return UIFont(name: "KoPubWorldDotumPM", size: size)
+                ?? UIFont(name: "KoPubWorldDotum_Pro Medium", size: size)
+                ?? UIFont.systemFont(ofSize: size)
+        case .pretendard:
+            // This one we had correct
+            return UIFont(name: "Pretendard-Regular", size: size)
+                ?? UIFont.systemFont(ofSize: size)
+        case .ridiBatang:
+            // Actual PostScript name: RIDIBatangRegular
+            return UIFont(name: "RIDIBatangRegular", size: size)
+                ?? UIFont(name: "RIDIBatang", size: size)
+                ?? UIFont.systemFont(ofSize: size)
         }
     }
     
@@ -105,6 +183,15 @@ enum AppFont: String, CaseIterable, Identifiable {
             return .custom("NanumMyeongjo-Bold", size: 28)
         case .nanumGothic:
             return .custom("NanumGothicBold", size: 28)
+        case .koPubBatang:
+            // Only Regular variant available, use with bold weight simulation
+            return .custom("KoPubBatang-Regular", size: 28)
+        case .koPubDotum:
+            return .custom("KoPubDotum-Regular", size: 28)
+        case .pretendard:
+            return .custom("Pretendard-Regular", size: 28)
+        case .ridiBatang:
+            return .custom("RIDIBatang-Regular", size: 28)
         }
     }
     
@@ -128,6 +215,39 @@ enum AppFont: String, CaseIterable, Identifiable {
             return .custom("NanumMyeongjo", size: size)
         case .nanumGothic:
             return .custom("NanumGothic", size: size)
+        case .koPubBatang:
+            // Try multiple possible PostScript names
+            if UIFont(name: "KoPubBatang-Regular", size: size) != nil {
+                return .custom("KoPubBatang-Regular", size: size)
+            } else if UIFont(name: "KoPubBatangRegular", size: size) != nil {
+                return .custom("KoPubBatangRegular", size: size)
+            } else {
+                return .custom("KoPubBatang-Regular", size: size)
+            }
+        case .koPubDotum:
+            if UIFont(name: "KoPubDotum-Regular", size: size) != nil {
+                return .custom("KoPubDotum-Regular", size: size)
+            } else if UIFont(name: "KoPubDotumRegular", size: size) != nil {
+                return .custom("KoPubDotumRegular", size: size)
+            } else {
+                return .custom("KoPubDotum-Regular", size: size)
+            }
+        case .pretendard:
+            if UIFont(name: "Pretendard-Regular", size: size) != nil {
+                return .custom("Pretendard-Regular", size: size)
+            } else if UIFont(name: "PretendardRegular", size: size) != nil {
+                return .custom("PretendardRegular", size: size)
+            } else {
+                return .custom("Pretendard-Regular", size: size)
+            }
+        case .ridiBatang:
+            if UIFont(name: "RIDIBatang-Regular", size: size) != nil {
+                return .custom("RIDIBatang-Regular", size: size)
+            } else if UIFont(name: "RIDIBatangRegular", size: size) != nil {
+                return .custom("RIDIBatangRegular", size: size)
+            } else {
+                return .custom("RIDIBatang-Regular", size: size)
+            }
         }
     }
 }
@@ -136,9 +256,11 @@ class FontManager: ObservableObject {
     static let shared = FontManager()
     @Published var currentFont: AppFont = .system
     @Published var writingFontSize: CGFloat = 17
+    @Published var lineSpacing: CGFloat = 4
     
     private let fontKey = "selectedFont"
     private let fontSizeKey = "writingFontSize"
+    private let lineSpacingKey = "lineSpacing"
     
     init() {
         if let savedFont = UserDefaults.standard.string(forKey: fontKey),
@@ -146,6 +268,7 @@ class FontManager: ObservableObject {
             currentFont = font
         }
         writingFontSize = UserDefaults.standard.object(forKey: fontSizeKey) as? CGFloat ?? 17
+        lineSpacing = UserDefaults.standard.object(forKey: lineSpacingKey) as? CGFloat ?? 4
     }
     
     func setFont(_ font: AppFont) {
@@ -156,6 +279,11 @@ class FontManager: ObservableObject {
     func setFontSize(_ size: CGFloat) {
         writingFontSize = size
         UserDefaults.standard.set(size, forKey: fontSizeKey)
+    }
+    
+    func setLineSpacing(_ spacing: CGFloat) {
+        lineSpacing = spacing
+        UserDefaults.standard.set(spacing, forKey: lineSpacingKey)
     }
 }
 

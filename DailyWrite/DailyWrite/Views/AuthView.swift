@@ -11,6 +11,7 @@ struct AuthView: View {
     @State private var isSignUp = false
     @State private var errorMessage: String?
     @State private var isLoading = false
+    @StateObject private var themeManager = ThemeManager.shared
     
     var body: some View {
         NavigationStack {
@@ -19,9 +20,9 @@ struct AuthView: View {
                 VStack(spacing: 8) {
                     Image(systemName: "pencil.circle.fill")
                         .font(.system(size: 80))
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(themeManager.accent)
                     
-                    Text("DailyWrite")
+                    Text("WriteHabit")
                         .font(.largeTitle)
                         .fontWeight(.bold)
                     
@@ -77,7 +78,7 @@ struct AuthView: View {
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.blue)
+                    .background(themeManager.accent)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
                 .disabled(isLoading || email.isEmpty || password.isEmpty)
@@ -106,7 +107,7 @@ struct AuthView: View {
                 } label: {
                     Text(isSignUp ? "Already have an account? Sign In".localized : "Don't have an account? Sign Up".localized)
                         .font(.subheadline)
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(themeManager.accent)
                 }
                 
                 Spacer()
@@ -166,7 +167,10 @@ struct AuthView: View {
                 }
             }
         case .failure(let error):
-            errorMessage = error.localizedDescription
+            let authError = error as? ASAuthorizationError
+            if authError?.code != .canceled {
+                errorMessage = error.localizedDescription
+            }
         }
     }
     

@@ -4,9 +4,9 @@ import FirebaseFirestore
 
 struct ProfileView: View {
     let userId: String? // nil = current user's profile
+    var onSignOut: (() -> Void)? = nil // Callback when user signs out
     @State private var essays: [Essay] = []
     @State private var isLoading = false
-    @State private var showingSignOutConfirmation = false
     @State private var showingSettings = false
     @State private var showingAllEssays = false
     @State private var showingEditProfile = false
@@ -16,11 +16,15 @@ struct ProfileView: View {
     @State private var showingChallenges = false
     @State private var showingBookExport = false
     @State private var showingFriends = false
+    @State private var showingNotifications = false
     @State private var friendCount = 0
+    @State private var unreadNotificationCount = 0
+    @StateObject private var friendsService = FriendsService.shared
     @State private var userProfile: UserProfile?
     @State private var isFollowing = false
     @State private var isUpdatingFollow = false
     @StateObject private var languageManager = LanguageManager.shared
+    @StateObject private var themeManager = ThemeManager.shared
     
     var isOwnProfile: Bool {
         guard let targetId = userId else { return true }
@@ -42,7 +46,10 @@ struct ProfileView: View {
                     })
                     
                     // Stats row
-                    StatsRow()
+                    StatsRow(essayCount: essays.count, 
+                             totalLikes: essays.reduce(0) { $0 + $1.likesCount },
+                             friends: friendCount,
+                             followers: 0) // TODO: Load actual followers count from Firebase
                     
                     Divider()
                         .padding(.horizontal)
@@ -82,6 +89,7 @@ struct ProfileView: View {
                         } label: {
                             HStack {
                                 Image(systemName: "calendar")
+                                    .foregroundStyle(.primary)
                                 Text("Writing Archive".localized)
                                 Spacer()
                                 Image(systemName: "chevron.right")
@@ -94,6 +102,8 @@ struct ProfileView: View {
                             .background(Color(.systemGray6))
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
+                        .tint(.primary)
+                        .buttonStyle(.plain)
                         .padding(.horizontal)
                         
                         Button {
@@ -101,6 +111,7 @@ struct ProfileView: View {
                         } label: {
                             HStack {
                                 Image(systemName: "doc.badge.clock")
+                                    .foregroundStyle(.primary)
                                 Text("Drafts".localized)
                                 Spacer()
                                 Image(systemName: "chevron.right")
@@ -113,6 +124,8 @@ struct ProfileView: View {
                             .background(Color(.systemGray6))
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
+                        .tint(.primary)
+                        .buttonStyle(.plain)
                         .padding(.horizontal)
                         
                         Button {
@@ -120,6 +133,7 @@ struct ProfileView: View {
                         } label: {
                             HStack {
                                 Image(systemName: "chart.bar.fill")
+                                    .foregroundStyle(.primary)
                                 Text("Writing Analytics".localized)
                                 Spacer()
                                 Image(systemName: "chevron.right")
@@ -132,6 +146,8 @@ struct ProfileView: View {
                             .background(Color(.systemGray6))
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
+                        .tint(.primary)
+                        .buttonStyle(.plain)
                         .padding(.horizontal)
                         
                         Button {
@@ -139,6 +155,7 @@ struct ProfileView: View {
                         } label: {
                             HStack {
                                 Image(systemName: "trophy.fill")
+                                    .foregroundStyle(.primary)
                                 Text("Challenges".localized)
                                 Spacer()
                                 Image(systemName: "chevron.right")
@@ -151,6 +168,8 @@ struct ProfileView: View {
                             .background(Color(.systemGray6))
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
+                        .tint(.primary)
+                        .buttonStyle(.plain)
                         .padding(.horizontal)
                         
                         Button {
@@ -158,13 +177,25 @@ struct ProfileView: View {
                         } label: {
                             HStack {
                                 Image(systemName: "person.2.fill")
+                                    .foregroundStyle(.primary)
                                 Text("Friends".localized)
                                 Spacer()
-                                if friendCount > 0 {
+                                
+                                // Show pending requests badge
+                                if friendsService.pendingRequests.count > 0 {
+                                    Text("\(friendsService.pendingRequests.count)")
+                                        .font(.caption2)
+                                        .fontWeight(.bold)
+                                        .foregroundStyle(.white)
+                                        .frame(width: 20, height: 20)
+                                        .background(Color.red)
+                                        .clipShape(Circle())
+                                } else if friendCount > 0 {
                                     Text("\(friendCount)")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
+                                
                                 Image(systemName: "chevron.right")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
@@ -175,6 +206,8 @@ struct ProfileView: View {
                             .background(Color(.systemGray6))
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
+                        .tint(.primary)
+                        .buttonStyle(.plain)
                         .padding(.horizontal)
                         
                         Button {
@@ -182,6 +215,7 @@ struct ProfileView: View {
                         } label: {
                             HStack {
                                 Image(systemName: "book.closed.fill")
+                                    .foregroundStyle(.primary)
                                 Text("Create Book".localized)
                                 Spacer()
                                 Image(systemName: "chevron.right")
@@ -194,17 +228,11 @@ struct ProfileView: View {
                             .background(Color(.systemGray6))
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
+                        .tint(.primary)
+                        .buttonStyle(.plain)
                         .padding(.horizontal)
                         
-                        // Sign out button
-                        Button {
-                            showingSignOutConfirmation = true
-                        } label: {
-                            Text("Sign Out".localized)
-                                .font(.subheadline)
-                                .foregroundStyle(.red)
-                        }
-                        .padding(.top, 20)
+                        Spacer()
                     }
                     
                     Spacer()
@@ -222,10 +250,32 @@ struct ProfileView: View {
                         }
                     }
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            showingSettings = true
-                        } label: {
-                            Image(systemName: "gear")
+                        HStack(spacing: 8) {
+                            // Notification bell
+                            Button {
+                                showingNotifications = true
+                            } label: {
+                                ZStack {
+                                    Image(systemName: "bell")
+                                    if unreadNotificationCount > 0 {
+                                        Circle()
+                                            .fill(Color.red)
+                                            .frame(width: 14, height: 14)
+                                            .overlay(
+                                                Text("\(unreadNotificationCount)")
+                                                    .font(.system(size: 9, weight: .bold))
+                                                    .foregroundColor(.white)
+                                            )
+                                            .offset(x: 8, y: -8)
+                                    }
+                                }
+                            }
+                            
+                            Button {
+                                showingSettings = true
+                            } label: {
+                                Image(systemName: "gear")
+                            }
                         }
                     }
                 }
@@ -233,7 +283,12 @@ struct ProfileView: View {
             .sheet(isPresented: $showingSettings) {
                 SettingsView()
             }
-            .sheet(isPresented: $showingEditProfile) {
+            .sheet(isPresented: $showingEditProfile, onDismiss: {
+                // Refresh profile when EditProfile sheet dismisses
+                Task {
+                    await loadUserProfile()
+                }
+            }) {
                 EditProfileView()
             }
             .sheet(isPresented: $showingAllEssays) {
@@ -257,24 +312,68 @@ struct ProfileView: View {
             .sheet(isPresented: $showingBookExport) {
                 BookExportView()
             }
+            .sheet(isPresented: $showingNotifications) {
+                NotificationsView()
+            }
         }
         .task {
             await loadUserProfile()
             await loadFriendCount()
             await loadUserEssays()
+            await loadUnreadNotificationCount()
+            friendsService.startListeningForRequests()
+            startNotificationListener()
         }
-        .alert("Sign Out?".localized, isPresented: $showingSignOutConfirmation) {
-            Button("Cancel".localized, role: .cancel) { }
-            Button("Sign Out".localized, role: .destructive) {
-                signOut()
+        .onAppear {
+            // Refresh profile when returning from EditProfile
+            Task {
+                await loadUserProfile()
             }
         }
+    }
+    
+    private func loadUnreadNotificationCount() async {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        
+        do {
+            let db = Firestore.firestore()
+            let snapshot = try await db.collection("notifications")
+                .whereField("userId", isEqualTo: userId)
+                .whereField("isRead", isEqualTo: false)
+                .count.getAggregation(source: .server)
+            
+            await MainActor.run {
+                unreadNotificationCount = Int(snapshot.count)
+            }
+        } catch {
+            print("Error loading unread count: \(error)")
+        }
+    }
+    
+    private func startNotificationListener() {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        
+        let db = Firestore.firestore()
+        db.collection("notifications")
+            .whereField("userId", isEqualTo: userId)
+            .whereField("isRead", isEqualTo: false)
+            .addSnapshotListener { snapshot, error in
+                guard let snapshot = snapshot else {
+                    print("Error listening to notifications: \(error?.localizedDescription ?? "Unknown")")
+                    return
+                }
+                
+                Task { @MainActor in
+                    self.unreadNotificationCount = snapshot.documents.count
+                }
+            }
     }
     
     private func loadUserProfile() async {
         guard !profileUserId.isEmpty else { return }
         do {
             userProfile = try await FirebaseService.shared.getUserProfile(userId: profileUserId)
+            print("DEBUG: Profile loaded, photoUrl: \(userProfile?.profilePhotoUrl?.prefix(30) ?? "nil")")
             if !isOwnProfile {
                 await checkIfFollowing()
             }
@@ -288,6 +387,7 @@ struct ProfileView: View {
         do {
             let friends = try await FriendsService.shared.getFriends()
             friendCount = friends.count
+            print("[DEBUG] Loaded \(friendCount) friends")
         } catch {
             print("Error loading friend count: \(error)")
         }
@@ -298,6 +398,9 @@ struct ProfileView: View {
         isLoading = true
         do {
             essays = try await FirebaseService.shared.getUserEssays(userId: profileUserId)
+            print("[DEBUG] Loaded \(essays.count) essays")
+            let totalLikes = essays.reduce(0) { $0 + $1.likesCount }
+            print("[DEBUG] Total likes: \(totalLikes)")
         } catch {
             print("Error loading essays: \(error.localizedDescription)")
         }
@@ -341,6 +444,10 @@ struct ProfileView: View {
     private func signOut() {
         do {
             try Auth.auth().signOut()
+            // Small delay to let UI dismiss alert
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                self.onSignOut?()
+            }
         } catch {
             print("Error signing out: \(error.localizedDescription)")
         }
@@ -352,17 +459,26 @@ struct ProfileHeader: View {
     let isOwnProfile: Bool
     let isFollowing: Bool
     let onFollowTapped: () -> Void
+    @StateObject private var themeManager = ThemeManager.shared
     
     var body: some View {
         VStack(spacing: 16) {
-            Circle()
-                .fill(Color.blue.opacity(0.2))
-                .frame(width: 100, height: 100)
-                .overlay {
-                    Image(systemName: "person.fill")
-                        .font(.system(size: 40))
-                        .foregroundStyle(.blue)
-                }
+            // Avatar with profile photo
+            if let profile = profile {
+                AvatarView(url: profile.profilePhotoUrl, size: 100, userId: profile.userId)
+                    .onAppear {
+                        print("ProfileHeader: AvatarView appeared, photoUrl: \(profile.profilePhotoUrl?.prefix(30) ?? "nil")")
+                    }
+            } else {
+                Circle()
+                    .fill(themeManager.accent.opacity(0.2))
+                    .frame(width: 100, height: 100)
+                    .overlay {
+                        Image(systemName: "person.fill")
+                            .font(.system(size: 40))
+                            .foregroundStyle(themeManager.accent)
+                    }
+            }
             
             VStack(spacing: 4) {
                 Text(profile?.displayName ?? "Writer".localized)
@@ -393,7 +509,7 @@ struct ProfileHeader: View {
                     .fontWeight(.medium)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 8)
-                    .background(isFollowing ? Color.secondary.opacity(0.2) : Color.blue)
+                    .background(isFollowing ? Color.secondary.opacity(0.2) : themeManager.accent)
                     .foregroundColor(isFollowing ? .gray : .white)
                     .clipShape(Capsule())
                 }
@@ -407,7 +523,7 @@ struct ProfileHeader: View {
                         Link(destination: URL(string: blog)!) {
                             Image(systemName: "link.circle.fill")
                                 .font(.title2)
-                                .foregroundStyle(.blue)
+                                .foregroundStyle(themeManager.accent)
                         }
                     }
                     if let brunch = profile.brunchUrl, !brunch.isEmpty {
@@ -435,7 +551,7 @@ struct ProfileHeader: View {
                         Link(destination: URL(string: threads)!) {
                             Image(systemName: "at.circle.fill")
                                 .font(.title2)
-                                .foregroundStyle(.black)
+                                .foregroundStyle(.primary)
                         }
                     }
                 }
@@ -454,11 +570,25 @@ struct ProfileHeader: View {
 }
 
 struct StatsRow: View {
+    let essayCount: Int
+    let totalLikes: Int
+    let friends: Int
+    let followers: Int
+    
     var body: some View {
-        HStack(spacing: 40) {
-            ProfileStatView(value: "47", label: "Essays".localized)
-            ProfileStatView(value: "1.2k", label: "Likes".localized)
-            ProfileStatView(value: "18", label: "Followers".localized)
+        HStack(spacing: 30) {
+            ProfileStatView(value: "\(essayCount)", label: "Essays".localized)
+            ProfileStatView(value: formatLikes(totalLikes), label: "Likes".localized)
+            ProfileStatView(value: "\(friends)", label: "Friends".localized)
+            ProfileStatView(value: "\(followers)", label: "Followers".localized)
+        }
+    }
+    
+    func formatLikes(_ likes: Int) -> String {
+        if likes >= 1000 {
+            return String(format: "%.1fk", Double(likes) / 1000.0)
+        } else {
+            return "\(likes)"
         }
     }
 }
@@ -481,13 +611,14 @@ struct ProfileStatView: View {
 
 struct MyEssayRow: View {
     let essay: Essay
+    @StateObject private var themeManager = ThemeManager.shared
     
     var body: some View {
         HStack(spacing: 16) {
             // Keyword emoji badge
             ZStack {
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.blue.opacity(0.1))
+                    .fill(themeManager.accent.opacity(0.1))
                     .frame(width: 60, height: 60)
                 
                 Text(KeywordEmojiService.shared.emojiForKeyword(essay.keyword))
@@ -519,5 +650,5 @@ private func timeAgo(from date: Date) -> String {
 }
 
 #Preview {
-    ProfileView(userId: nil)
+    ProfileView(userId: nil, onSignOut: {})
 }

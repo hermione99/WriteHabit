@@ -7,6 +7,7 @@ struct ContentView: View {
     @State private var showLanguageSelector = false
     @State private var needsUsernameSetup = false
     @State private var showEditProfile = false
+    @State private var navigateToEssayId: String? = nil
     @StateObject private var languageManager = LanguageManager.shared
     @StateObject private var themeManager = ThemeManager.shared
     
@@ -15,9 +16,11 @@ struct ContentView: View {
             if showLanguageSelector {
                 LanguageSelectorView(showLanguageSelector: $showLanguageSelector)
             } else if needsUsernameSetup {
-                UsernameSetupView(isAuthenticated: $isAuthenticated)
+                UsernameSetupView(isAuthenticated: $isAuthenticated, needsUsernameSetup: $needsUsernameSetup)
             } else if isAuthenticated {
-                MainTabView(selectedTab: $selectedTab, showEditProfile: $showEditProfile)
+                MainTabView(selectedTab: $selectedTab, showEditProfile: $showEditProfile, navigateToEssayId: $navigateToEssayId, onSignOut: {
+                    isAuthenticated = false
+                })
                     .sheet(isPresented: $showEditProfile) {
                         EditProfileView()
                     }
@@ -28,6 +31,7 @@ struct ContentView: View {
         }
         .onAppear {
             checkAuthState()
+            setupNotificationObserver()
         }
         .onChange(of: Auth.auth().currentUser) { _, user in
             if let user = user {
@@ -36,6 +40,19 @@ struct ContentView: View {
             } else {
                 isAuthenticated = false
                 needsUsernameSetup = false
+            }
+        }
+    }
+    
+    private func setupNotificationObserver() {
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("NavigateToEssay"),
+            object: nil,
+            queue: .main
+        ) { notification in
+            if let essayId = notification.userInfo?["essayId"] as? String {
+                navigateToEssayId = essayId
+                selectedTab = 1 // Switch to Feed tab
             }
         }
     }
@@ -80,6 +97,9 @@ struct ContentView: View {
 struct MainTabView: View {
     @Binding var selectedTab: Int
     @Binding var showEditProfile: Bool
+    @Binding var navigateToEssayId: String?
+    var onSignOut: (() -> Void)? = nil
+    @StateObject private var friendsService = FriendsService.shared
     
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -89,17 +109,24 @@ struct MainTabView: View {
                 }
                 .tag(0)
             
-            FeedView()
+            FeedView(navigateToEssayId: $navigateToEssayId)
                 .tabItem {
                     Label("Feed".localized, systemImage: "newspaper")
                 }
                 .tag(1)
             
-            ProfileView(userId: nil)
+            ProfileView(userId: nil, onSignOut: onSignOut)
                 .tabItem {
                     Label("Profile".localized, systemImage: "person")
                 }
+                .badge(friendsService.pendingRequests.count)
                 .tag(2)
+        }
+        .onAppear {
+            friendsService.startListeningForRequests()
+        }
+        .onDisappear {
+            friendsService.stopListeningForRequests()
         }
     }
 }

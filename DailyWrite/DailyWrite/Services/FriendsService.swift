@@ -1,9 +1,64 @@
 import FirebaseFirestore
 import FirebaseAuth
 
-class FriendsService {
+class FriendsService: ObservableObject {
     static let shared = FriendsService()
     private let db = Firestore.firestore()
+    
+    @Published var pendingRequests: [FriendRequest] = []
+    private var requestsListener: ListenerRegistration?
+    
+    func startListeningForRequests() {
+        guard let currentUserId = Auth.auth().currentUser?.uid else { return }
+        
+        // Stop existing listener
+        stopListeningForRequests()
+        
+        requestsListener = db.collection("friendRequests")
+            .whereField("toUserId", isEqualTo: currentUserId)
+            .whereField("status", isEqualTo: "pending")
+            .order(by: "createdAt", descending: true)
+            .addSnapshotListener { [weak self] snapshot, error in
+                guard let self = self else { return }
+                
+                if let error = error {
+                    print("Error listening for friend requests: \(error)")
+                    return
+                }
+                
+                let requests = snapshot?.documents.compactMap { doc -> FriendRequest? in
+                    try? doc.data(as: FriendRequest.self)
+                } ?? []
+                
+                // Check for new requests BEFORE updating
+                let oldCount = self.pendingRequests.count
+                let newCount = requests.count
+                
+                DispatchQueue.main.async {
+                    self.pendingRequests = requests
+                    
+                    // Send notification if new requests arrived
+                    if newCount > oldCount {
+                        self.sendFriendRequestNotification(count: newCount)
+                    }
+                }
+            }
+    }
+    
+    func stopListeningForRequests() {
+        requestsListener?.remove()
+        requestsListener = nil
+    }
+    
+    private func sendFriendRequestNotification(count: Int) {
+        let content = UNMutableNotificationContent()
+        content.title = "New Friend Request".localized
+        content.body = count == 1 ? "You have a new friend request!".localized : "You have \(count) new friend requests!".localized
+        content.sound = .default
+        
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request)
+    }
     
     // MARK: - Friend Requests
     
@@ -70,6 +125,15 @@ class FriendsService {
         
         try await db.collection("users").document(friendId).updateData([
             "friends": FieldValue.arrayUnion([currentUserId])
+        ])
+        
+        // Also add to following list (friends automatically follow each other)
+        try await db.collection("users").document(currentUserId).updateData([
+            "following": FieldValue.arrayUnion([friendId])
+        ])
+        
+        try await db.collection("users").document(friendId).updateData([
+            "following": FieldValue.arrayUnion([currentUserId])
         ])
     }
     
@@ -202,6 +266,15 @@ class FriendsService {
         
         try await db.collection("users").document(userId).updateData([
             "friends": FieldValue.arrayRemove([currentUserId])
+        ])
+        
+        // Also unfollow each other
+        try await db.collection("users").document(currentUserId).updateData([
+            "following": FieldValue.arrayRemove([userId])
+        ])
+        
+        try await db.collection("users").document(userId).updateData([
+            "following": FieldValue.arrayRemove([currentUserId])
         ])
     }
     
