@@ -119,37 +119,18 @@ class NotificationService: NSObject, ObservableObject {
     
     // Localized notification text
     private func localizedTitle() -> String {
-        let language = LanguageManager.shared.currentLanguage
-        switch language {
-        case .korean:
-            return "✍️ 오늘의 글쓰기 시간"
-        case .english:
-            return "✍️ Time to Write"
-        }
+        return "✍️ 오늘의 글쓰기 시간"
     }
     
     private func localizedBody() -> String {
-        let language = LanguageManager.shared.currentLanguage
-        let keyword = getTodayKeyword()
-        switch language {
-        case .korean:
-            return "오늘의 키워드 '\(keyword)'에 대해 글을 써보세요. 당신의 이야기를 기다리고 있어요!"
-        case .english:
-            return "Write about today's keyword '\(keyword)'. Your story awaits!"
-        }
-    }
-    
-    // Get today's keyword (simplified, actual implementation would fetch from generator)
-    private func getTodayKeyword() -> String {
-        // This is a placeholder - in production, you'd get this from KeywordGenerator
-        return LanguageManager.shared.currentLanguage == .korean ? "시작" : "Beginning"
+        return "오늘의 키워드가 기다리고 있어요. 앱을 열어 확인해보세요!"
     }
     
     // Test notification (for development)
     func sendTestNotification() {
         let content = UNMutableNotificationContent()
-        content.title = localizedTitle()
-        content.body = localizedBody()
+        content.title = "✍️ 오늘의 글쓰기 시간"
+        content.body = "오늘의 키워드가 기다리고 있어요. 앱을 열어 확인해보세요!"
         content.sound = .default
         
         let request = UNNotificationRequest(
@@ -238,14 +219,19 @@ struct NotificationSettingsView: View {
                 }
                 
                 if notificationService.isReminderEnabled {
-                    Section("Reminder Time".localized) {
-                        DatePicker(
-                            "Time".localized,
-                            selection: $notificationService.reminderTime,
-                            displayedComponents: .hourAndMinute
-                        )
-                        .datePickerStyle(.graphical)
-                        .labelsHidden()
+                    Section {
+                        HStack {
+                            Text("매일")
+                                .font(.body)
+                            Spacer()
+                            DatePicker(
+                                "",
+                                selection: $notificationService.reminderTime,
+                                displayedComponents: .hourAndMinute
+                            )
+                            .datePickerStyle(.compact)
+                            .frame(width: 100)
+                        }
                     }
                     
                     Section {
@@ -254,7 +240,7 @@ struct NotificationSettingsView: View {
                         } label: {
                             HStack {
                                 Spacer()
-                                Text("Send Test Notification".localized)
+                                Text("테스트 알림 보내기")
                                 Spacer()
                             }
                         }
@@ -377,7 +363,44 @@ extension NotificationService {
         }
     }
     
-    // MARK: - Comment/Reply Notifications
+    /// Sends a notification when someone follows the user
+    func notifyUserOfFollow(followerId: String, targetUserId: String) async {
+        // Don't notify if user follows themselves (shouldn't happen, but safety check)
+        guard followerId != targetUserId else { return }
+        
+        // Get follower's name
+        do {
+            let followerDoc = try await db.collection("users").document(followerId).getDocument()
+            guard let followerProfile = try? followerDoc.data(as: UserProfile.self) else { return }
+            
+            let followerName = followerProfile.displayName
+            
+            #if DEBUG
+            print("[DEBUG Notification] Sending follow notification to user: \(targetUserId)")
+            #endif
+            
+            let notification = InAppNotification(
+                id: nil,
+                userId: targetUserId,
+                type: .follow,
+                title: "New Follower".localized,
+                body: String(format: "%@ started following you".localized, followerName),
+                relatedId: followerId,
+                isRead: false,
+                createdAt: Date()
+            )
+            
+            try await saveInAppNotification(notification)
+            
+            await sendPushNotification(
+                to: targetUserId,
+                title: "New Follower".localized,
+                body: String(format: "%@ started following you".localized, followerName)
+            )
+        } catch {
+            print("Error sending follow notification: \(error)")
+        }
+    }
     
     /// Sends a notification to the essay author when someone comments
     func notifyEssayAuthorOfComment(essayId: String, essayAuthorId: String, commenterName: String, commentContent: String) async {

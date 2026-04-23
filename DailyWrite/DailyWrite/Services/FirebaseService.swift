@@ -18,10 +18,16 @@ class FirebaseService: ObservableObject {
         print("[DEBUG createEssay #\(callId)] Creating essay - keyword: \(keyword), title: \(title.prefix(20))...")
         print("[DEBUG createEssay #\(callId)] isDraft: \(isDraft), visibility: \(visibility)")
         
+        // Fetch user's profile to get username/displayName
+        let userDoc = try? await db.collection("users").document(user.uid).getDocument()
+        let username = userDoc?.data()?["username"] as? String
+        let displayName = userDoc?.data()?["displayName"] as? String
+        let authorName = username ?? displayName ?? user.displayName ?? user.email ?? "Anonymous"
+        
         let essay = Essay(
             id: String?.none,
             authorId: user.uid,
-            authorName: user.displayName ?? user.email ?? "Anonymous",
+            authorName: authorName,
             keyword: keyword,
             title: title,
             content: content,
@@ -42,7 +48,18 @@ class FirebaseService: ObservableObject {
         let docRef = db.collection("essays").document()
         print("[DEBUG createEssay #\(callId)] Writing to document: \(docRef.documentID)")
         print("[DEBUG createEssay #\(callId)] Content preview: \(content.prefix(50))...")
+        
+        // Write and verify
         try await docRef.setData(essay.dictionary)
+        
+        // Immediately verify the write
+        let verifyDoc = try await docRef.getDocument()
+        if verifyDoc.exists {
+            print("[DEBUG createEssay #\(callId)] ✅ VERIFIED: Document exists in Firestore")
+        } else {
+            print("[DEBUG createEssay #\(callId)] ❌ ERROR: Document NOT FOUND after write!")
+        }
+        
         print("[DEBUG createEssay #\(callId)] Successfully created essay with ID: \(docRef.documentID)")
         
         var savedEssay = essay
@@ -129,6 +146,10 @@ class FirebaseService: ObservableObject {
         var essay = try doc.data(as: Essay.self)
         if essay.id == nil {
             essay.id = doc.documentID
+        }
+        // Exclude deleted essays - user can write a new one if they deleted the old one
+        if essay.deletedAt != nil {
+            return nil
         }
         return essay
     }
@@ -311,7 +332,7 @@ class FirebaseService: ObservableObject {
             .order(by: "createdAt", descending: true)
             .getDocuments()
         
-        // Manual decoding with timestamp validation, exclude deleted essays
+        // Manual decoding with timestamp validation, include deleted essays for "recently deleted" feature
         var essays: [Essay] = []
         for doc in snapshot.documents {
             if var essay = try? await safelyDecodeEssay(from: doc) {
@@ -319,13 +340,40 @@ class FirebaseService: ObservableObject {
                 if essay.id == nil {
                     essay.id = doc.documentID
                 }
-                // Skip if essay is in recently deleted
-                if essay.deletedAt == nil {
-                    essays.append(essay)
-                }
+                essays.append(essay)
             }
         }
         return essays
+    }
+    
+    // MARK: - Essay Counts by Keyword
+    
+    func getEssayCountForKeyword(keyword: String) async throws -> Int {
+        let snapshot = try await db.collection("essays")
+            .whereField("keyword", isEqualTo: keyword)
+            .whereField("isDraft", isEqualTo: false)
+            .whereField("deletedAt", isEqualTo: NSNull())
+            .count
+            .getAggregation(source: .server)
+        
+        return Int(snapshot.count)
+    }
+    
+    func getEssayCountsForKeywords(keywords: [String]) async throws -> [String: Int] {
+        var counts: [String: Int] = [:]
+        
+        // Process in batches to avoid overwhelming Firestore
+        for keyword in keywords {
+            do {
+                let count = try await getEssayCountForKeyword(keyword: keyword)
+                counts[keyword] = count
+            } catch {
+                print("Error getting count for keyword '\(keyword)': \(error)")
+                counts[keyword] = 0
+            }
+        }
+        
+        return counts
     }
     
     private func safelyDecodeEssay(from document: DocumentSnapshot) async throws -> Essay? {
@@ -693,6 +741,12 @@ class FirebaseService: ObservableObject {
         try await userRef.updateData([
             "following": FieldValue.arrayUnion([targetUserId])
         ])
+        
+        // Send notification to the followed user
+        await NotificationService.shared.notifyUserOfFollow(
+            followerId: currentUserId,
+            targetUserId: targetUserId
+        )
     }
     
     func unfollowUser(currentUserId: String, targetUserId: String) async throws {
@@ -735,10 +789,12 @@ class FirebaseService: ObservableObject {
                 .limit(to: 20)
                 .getDocuments()
             
-            let publicEssays = publicSnapshot.documents.compactMap { doc in
+            let publicEssays: [Essay] = publicSnapshot.documents.compactMap { doc in
                 do {
                     var essay = try doc.data(as: Essay.self)
                     if essay.id == nil { essay.id = doc.documentID }
+                    // Filter out deleted essays
+                    if essay.deletedAt != nil { return nil }
                     return essay
                 } catch { return nil }
             }
@@ -755,10 +811,12 @@ class FirebaseService: ObservableObject {
                     .limit(to: 20)
                     .getDocuments()
                 
-                let friendsEssays = friendsSnapshot.documents.compactMap { doc in
+                let friendsEssays: [Essay] = friendsSnapshot.documents.compactMap { doc in
                     do {
                         var essay = try doc.data(as: Essay.self)
                         if essay.id == nil { essay.id = doc.documentID }
+                        // Filter out deleted essays
+                        if essay.deletedAt != nil { return nil }
                         return essay
                     } catch { return nil }
                 }
@@ -793,6 +851,25 @@ class FirebaseService: ObservableObject {
             }
         }
         return essays
+    }
+    
+    // MARK: - Month Query
+    
+    func getEssaysForMonth(userId: String, date: Date) async throws -> [Essay] {
+        let calendar = Calendar.current
+        
+        // Get first day of month
+        guard let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: date)) else {
+            return []
+        }
+        
+        // Get first day of next month
+        guard let startOfNextMonth = calendar.date(byAdding: .month, value: 1, to: startOfMonth) else {
+            return []
+        }
+        
+        // Use the existing date range query
+        return try await getUserEssaysInDateRange(userId: userId, startDate: startOfMonth, endDate: startOfNextMonth)
     }
     
     // MARK: - Soft Delete (Recently Deleted)

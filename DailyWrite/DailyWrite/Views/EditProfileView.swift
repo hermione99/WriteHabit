@@ -6,7 +6,6 @@ struct EditProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var themeManager = ThemeManager.shared
     @State private var displayName = ""
-    @State private var bio = ""
     @State private var blogUrl = ""
     @State private var brunchUrl = ""
     @State private var instagramUrl = ""
@@ -57,11 +56,6 @@ struct EditProfileView: View {
                             Spacer()
                         }
                     }
-                }
-                
-                Section("Bio".localized) {
-                    TextEditor(text: $bio)
-                        .frame(minHeight: 100)
                 }
                 
                 Section("Links".localized) {
@@ -146,7 +140,6 @@ struct EditProfileView: View {
             return selectedProfileImage != nil || newProfilePhotoUrl != nil
         }
         let hasDisplayNameChange = displayName != profile.displayName
-        let hasBioChange = bio != profile.bio
         let hasPhotoChange = newProfilePhotoUrl != profile.profilePhotoUrl || selectedProfileImage != nil
         let hasLinkChanges = blogUrl != (profile.blogUrl ?? "")
             || brunchUrl != (profile.brunchUrl ?? "")
@@ -154,7 +147,7 @@ struct EditProfileView: View {
             || twitterUrl != (profile.twitterUrl ?? "")
             || threadsUrl != (profile.threadsUrl ?? "")
         
-        let result = hasDisplayNameChange || hasBioChange || hasPhotoChange || hasLinkChanges
+        let result = hasDisplayNameChange || hasPhotoChange || hasLinkChanges
         // print("hasChanges: debug removed")
         return result
     }
@@ -210,7 +203,6 @@ struct EditProfileView: View {
                 try await FirebaseService.shared.updateUserProfile(
                     userId: userId,
                     displayName: displayName,
-                    bio: bio,
                     blogUrl: blogUrl.isEmpty ? nil : blogUrl,
                     brunchUrl: brunchUrl.isEmpty ? nil : brunchUrl,
                     instagramUrl: instagramUrl.isEmpty ? nil : instagramUrl,
@@ -252,7 +244,6 @@ struct EditProfileView: View {
             print("loadProfile: profile loaded - \(userProfile != nil ? "success" : "nil")")
             if let profile = userProfile {
                 displayName = profile.displayName
-                bio = profile.bio
                 blogUrl = profile.blogUrl ?? ""
                 brunchUrl = profile.brunchUrl ?? ""
                 instagramUrl = profile.instagramUrl ?? ""

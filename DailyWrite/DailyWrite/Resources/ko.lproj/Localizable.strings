@@ -138,6 +138,15 @@
 "minutes ago" = "분 전";
 "just now" = "방금";
 
+/* Streaks */
+"Streaks" = "연속 기록";
+"days" = "일";
+"current streak" = "현재 연속";
+"resets when you miss the streak" = "연속이 끊어지면 초기화됩니다";
+"Challenge Completed!" = "도전 완료!";
+"30-Day Challenge Complete!" = "30일 연속 달성!";
+"Congratulations!" = "축하합니다!";
+
 /* Settings */
 "Account" = "계정";
 "Appearance" = "외관";
@@ -245,3 +254,23 @@
 "Last 30 Days" = "최근 30일";
 "Written" = "작성함";
 "Missed" = "놓침";
+
+/* Writing Editor */
+"Complete" = "완료";
+
+/* Notifications */
+"New Comment" = "새 댓글";
+"New Reply" = "새 답글";
+"New Follower" = "새 팔로워";
+"New Friend Request" = "새 친구 요청";
+"%@ commented on your essay" = "%@님이 당신의 에세이에 댓글을 달았습니다";
+"%@ replied to your comment" = "%@님이 당신의 댓글에 답글을 달았습니다";
+"%@ started following you" = "%@님이 당신을 팔로우하기 시작했습니다";
+"You have a new friend request!" = "새로운 친구 요청이 있습니다!";
+"You have %d new friend requests!" = "새로운 친구 요청이 %d개 있습니다!";
+
+/* Notification Prompt */
+"Daily Writing Reminder" = "일일 글쓰기 알림";
+"Would you like to receive daily reminders to write? You can change this anytime in Settings." = "매일 글쓰기 알림을 받으시겠습니까? 언제든지 설정에서 변경할 수 있습니다.";
+"Not Now" = "나중에";
+"Enable" = "활성화";

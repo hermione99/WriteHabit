@@ -17,6 +17,9 @@
 		AA0000000000000000000011 /* FirebaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000012 /* FirebaseService.swift */; };
 		AA0000000000000000000013 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000014 /* Assets.xcassets */; };
 		AB05CB9C2F8CAB35007977EA /* KeywordEmojiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB05CB9B2F8CAB35007977EA /* KeywordEmojiService.swift */; };
+		AB5294312F97661300231FAB /* PublicProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB5294302F97661300231FAB /* PublicProfileView.swift */; };
+		AB5294332F97B5A400231FAB /* ColorExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB5294322F97B5A400231FAB /* ColorExtensions.swift */; };
+		AB5294352F97B7C800231FAB /* KeywordBrowseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB5294342F97B7C800231FAB /* KeywordBrowseView.swift */; };
 		AB58A40A2F8BCAC400F26299 /* LanguageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A4092F8BCAC400F26299 /* LanguageManager.swift */; };
 		AB58A41F2F8BCCA800F26299 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = AB58A41A2F8BCCA800F26299 /* Localizable.strings */; };
 		AB58A4202F8BCCA800F26299 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = AB58A41D2F8BCCA800F26299 /* Localizable.strings */; };
@@ -33,6 +36,7 @@
 		AB58A45E2F8BEC8B00F26299 /* FontPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A45D2F8BEC8B00F26299 /* FontPickerView.swift */; };
 		AB58A4602F8BECA100F26299 /* KeywordArchiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A45F2F8BECA100F26299 /* KeywordArchiveView.swift */; };
 		AB58A4622F8BECAC00F26299 /* LanguageSelectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A4612F8BECAC00F26299 /* LanguageSelectorView.swift */; };
+		AB58A4632F8BED0000F26299 /* EssayDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A4622F8BED0000F26299 /* EssayDetailView.swift */; };
 		AB58A4642F8BECB400F26299 /* SimpleFontSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A4632F8BECB400F26299 /* SimpleFontSettingsView.swift */; };
 		AB58A4662F8BECCB00F26299 /* AIKeywordService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A4652F8BECCB00F26299 /* AIKeywordService.swift */; };
 		AB58A4682F8BECD200F26299 /* KeywordImageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A4672F8BECD200F26299 /* KeywordImageService.swift */; };
@@ -44,7 +48,6 @@
 		AB58A4852F8C857100F26299 /* UserChallenge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A4842F8C857100F26299 /* UserChallenge.swift */; };
 		AB58A4872F8C857800F26299 /* EditorSettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A4862F8C857800F26299 /* EditorSettingsManager.swift */; };
 		AB58A48B2F8C899700F26299 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A48A2F8C899700F26299 /* ThemeManager.swift */; };
-		AB58A48D2F8C89C000F26299 /* ThemePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A48C2F8C89C000F26299 /* ThemePickerView.swift */; };
 		AB58A48F2F8C89CC00F26299 /* BookExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A48E2F8C89CC00F26299 /* BookExportView.swift */; };
 		AB58A4912F8C89D700F26299 /* WritingAnalyticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A4902F8C89D700F26299 /* WritingAnalyticsView.swift */; };
 		AB58A4932F8C89DF00F26299 /* WritingChallengesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58A4922F8C89DF00F26299 /* WritingChallengesView.swift */; };
@@ -90,6 +93,9 @@
 		AA0000000000000000000012 /* FirebaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseService.swift; sourceTree = "<group>"; };
 		AA0000000000000000000014 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AB05CB9B2F8CAB35007977EA /* KeywordEmojiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeywordEmojiService.swift; sourceTree = "<group>"; };
+		AB5294302F97661300231FAB /* PublicProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicProfileView.swift; sourceTree = "<group>"; };
+		AB5294322F97B5A400231FAB /* ColorExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ColorExtensions.swift; path = DailyWrite/Utils/ColorExtensions.swift; sourceTree = "<group>"; };
+		AB5294342F97B7C800231FAB /* KeywordBrowseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeywordBrowseView.swift; sourceTree = "<group>"; };
 		AB58A4092F8BCAC400F26299 /* LanguageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LanguageManager.swift; path = DailyWrite/Models/LanguageManager.swift; sourceTree = "<group>"; };
 		AB58A4192F8BCCA800F26299 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Localizable.strings; sourceTree = "<group>"; };
 		AB58A41C2F8BCCA800F26299 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = Localizable.strings; sourceTree = "<group>"; };
@@ -106,6 +112,7 @@
 		AB58A45D2F8BEC8B00F26299 /* FontPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontPickerView.swift; sourceTree = "<group>"; };
 		AB58A45F2F8BECA100F26299 /* KeywordArchiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeywordArchiveView.swift; sourceTree = "<group>"; };
 		AB58A4612F8BECAC00F26299 /* LanguageSelectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageSelectorView.swift; sourceTree = "<group>"; };
+		AB58A4622F8BED0000F26299 /* EssayDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EssayDetailView.swift; sourceTree = "<group>"; };
 		AB58A4632F8BECB400F26299 /* SimpleFontSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleFontSettingsView.swift; sourceTree = "<group>"; };
 		AB58A4652F8BECCB00F26299 /* AIKeywordService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIKeywordService.swift; sourceTree = "<group>"; };
 		AB58A4672F8BECD200F26299 /* KeywordImageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeywordImageService.swift; sourceTree = "<group>"; };
@@ -118,7 +125,6 @@
 		AB58A4842F8C857100F26299 /* UserChallenge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserChallenge.swift; sourceTree = "<group>"; };
 		AB58A4862F8C857800F26299 /* EditorSettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorSettingsManager.swift; sourceTree = "<group>"; };
 		AB58A48A2F8C899700F26299 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
-		AB58A48C2F8C89C000F26299 /* ThemePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePickerView.swift; sourceTree = "<group>"; };
 		AB58A48E2F8C89CC00F26299 /* BookExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookExportView.swift; sourceTree = "<group>"; };
 		AB58A4902F8C89D700F26299 /* WritingAnalyticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WritingAnalyticsView.swift; sourceTree = "<group>"; };
 		AB58A4922F8C89DF00F26299 /* WritingChallengesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WritingChallengesView.swift; sourceTree = "<group>"; };
@@ -195,6 +201,8 @@
 		AA0000000000000000000018 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				AB5294342F97B7C800231FAB /* KeywordBrowseView.swift */,
+				AB5294302F97661300231FAB /* PublicProfileView.swift */,
 				AB7356A32F8F91CE008CCDC6 /* ThreadedCommentsView.swift */,
 				AB73569F2F8F7812008CCDC6 /* ProfileImagePicker.swift */,
 				AB7356992F8F6C2B008CCDC6 /* AvatarView.swift */,
@@ -204,7 +212,6 @@
 				AB58A4922F8C89DF00F26299 /* WritingChallengesView.swift */,
 				AB58A4902F8C89D700F26299 /* WritingAnalyticsView.swift */,
 				AB58A48E2F8C89CC00F26299 /* BookExportView.swift */,
-				AB58A48C2F8C89C000F26299 /* ThemePickerView.swift */,
 				AB58A47E2F8C822100F26299 /* SimpleWritingEditorView.swift */,
 				AB58A4632F8BECB400F26299 /* SimpleFontSettingsView.swift */,
 				AB58A4612F8BECAC00F26299 /* LanguageSelectorView.swift */,
@@ -214,6 +221,7 @@
 				AB58A4592F8BEC7800F26299 /* EditProfileView.swift */,
 				AB58A4572F8BEC7100F26299 /* DraftsView.swift */,
 				AB58A4552F8BEC6500F26299 /* AllEssaysView.swift */,
+				AB58A4622F8BED0000F26299 /* EssayDetailView.swift */,
 				AA0000000000000000000004 /* ContentView.swift */,
 				AB58A4532F8BEC2900F26299 /* UsernameSetupView.swift */,
 				AB58A4512F8BEB0300F26299 /* SettingsView.swift */,
@@ -255,6 +263,7 @@
 		AA000000000000000000001B = {
 			isa = PBXGroup;
 			children = (
+				AB5294322F97B5A400231FAB /* ColorExtensions.swift */,
 				AB73568D2F8DF865008CCDC6 /* RichTextEditor.swift */,
 				AB58A47C2F8C37DE00F26299 /* Localization.swift */,
 				AB58A4372F8BDAC100F26299 /* KeywordGenerator.swift */,
@@ -366,12 +375,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				AB7356A02F8F7812008CCDC6 /* ProfileImagePicker.swift in Sources */,
-				AB58A48D2F8C89C000F26299 /* ThemePickerView.swift in Sources */,
 				AB58A45A2F8BEC7800F26299 /* EditProfileView.swift in Sources */,
 				AB58A42A2F8BD16100F26299 /* FontManager.swift in Sources */,
 				AA0000000000000000000001 /* DailyWriteApp.swift in Sources */,
 				AB7356922F8EBE6E008CCDC6 /* KeywordsService.swift in Sources */,
 				AB58A4662F8BECCB00F26299 /* AIKeywordService.swift in Sources */,
+				AB5294332F97B5A400231FAB /* ColorExtensions.swift in Sources */,
+				AB5294352F97B7C800231FAB /* KeywordBrowseView.swift in Sources */,
 				AB58A4582F8BEC7100F26299 /* DraftsView.swift in Sources */,
 				AB05CB9C2F8CAB35007977EA /* KeywordEmojiService.swift in Sources */,
 				AB58A47F2F8C822100F26299 /* SimpleWritingEditorView.swift in Sources */,
@@ -379,6 +389,7 @@
 				AB58A4602F8BECA100F26299 /* KeywordArchiveView.swift in Sources */,
 				AB58A4622F8BECAC00F26299 /* LanguageSelectorView.swift in Sources */,
 				AB58A4382F8BDAC100F26299 /* KeywordGenerator.swift in Sources */,
+				AB5294312F97661300231FAB /* PublicProfileView.swift in Sources */,
 				AB58A4682F8BECD200F26299 /* KeywordImageService.swift in Sources */,
 				AA0000000000000000000003 /* ContentView.swift in Sources */,
 				AB799A582F8CDBAA002FE86F /* RecentlyDeletedView.swift in Sources */,
@@ -405,6 +416,7 @@
 				AB58A47D2F8C37DE00F26299 /* Localization.swift in Sources */,
 				AB73569A2F8F6C2B008CCDC6 /* AvatarView.swift in Sources */,
 				AB58A4562F8BEC6500F26299 /* AllEssaysView.swift in Sources */,
+				AB58A4632F8BED0000F26299 /* EssayDetailView.swift in Sources */,
 				AB58A4932F8C89DF00F26299 /* WritingChallengesView.swift in Sources */,
 				AB7356A42F8F91CE008CCDC6 /* ThreadedCommentsView.swift in Sources */,
 				ABE4FC9C2F8C970D003B22B6 /* FriendsView.swift in Sources */,

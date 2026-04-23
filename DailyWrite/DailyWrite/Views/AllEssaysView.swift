@@ -64,7 +64,9 @@ struct AllEssaysView: View {
         
         do {
             // Only fetch published essays (no drafts filter needed)
-            essays = try await FirebaseService.shared.getUserEssays(userId: user.uid)
+            let allEssays = try await FirebaseService.shared.getUserEssays(userId: user.uid)
+            // Filter out deleted essays - only show active ones in "All Essays"
+            essays = allEssays.filter { $0.deletedAt == nil }
         } catch {
             print("Error loading essays: \(error)")
         }

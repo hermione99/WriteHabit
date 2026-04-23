@@ -2,27 +2,6 @@ import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore
 
-struct TopicGroup: Identifiable {
-    let id = UUID()
-    let keyword: String
-    let essays: [Essay]
-    var essayCount: Int { essays.count }
-    let customEmoji: String?
-    
-    init(keyword: String, essays: [Essay], emoji: String? = nil) {
-        self.keyword = keyword
-        self.essays = essays
-        self.customEmoji = emoji
-    }
-    
-    var emoji: String {
-        if let custom = customEmoji {
-            return custom
-        }
-        return KeywordEmojiService.shared.emojiForKeyword(keyword)
-    }
-}
-
 struct EssayItem: Identifiable {
     let id: String
     let essay: Essay
@@ -46,18 +25,13 @@ struct FeedView: View {
     // Sort options
     @State private var followingSort: FollowingSort = .all
     @State private var recentSort: RecentSort = .date
-    @State private var topicSort: TopicSort = .keyword
-    
-    // By Topic specific
-    @State private var topicGroups: [TopicGroup] = []
-    @State private var selectedTopic: TopicGroup?
     
     // For notification navigation
     @State private var selectedEssayForDetail: Essay? = nil
     @State private var selectedAuthorForDetail: UserProfile? = nil
     @State private var showEssayDetail = false
     
-    let filters = ["Following".localized, "Today".localized, "Recent".localized, "By Topic".localized]
+    let filters = ["Following".localized, "Recent".localized]
     
     enum FollowingSort: String, CaseIterable {
         case all = "All"
@@ -70,32 +44,32 @@ struct FeedView: View {
         case trending = "Trending"
     }
     
-    enum TopicSort: String, CaseIterable {
-        case keyword = "Keyword"
-        case date = "Date"
-        case popular = "Popular"
-    }
-    
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                // Filter picker
-                Picker("Filter".localized, selection: $selectedFilter) {
-                    ForEach(0..<filters.count, id: \.self) { index in
-                        Text(filters[index]).tag(index)
+            ZStack {
+                // Beige background
+                Color(hex: "F5F0E8")
+                    .ignoresSafeArea()
+                
+                VStack(spacing: 0) {
+                    // Filter picker
+                    Picker("Filter".localized, selection: $selectedFilter) {
+                        ForEach(Array(filters.enumerated()), id: \.offset) { index, filter in
+                            Text(filter).tag(index)
+                        }
                     }
-                }
                 .pickerStyle(.segmented)
                 .padding()
                 .onChange(of: selectedFilter) { _ in
-                    selectedTopic = nil // Reset topic view when switching filters
-                    Task {
-                        await loadEssays()
+                    // Don't reload immediately, just switch the view
+                    // Data will be refreshed in background or on pull-to-refresh
+                    _Concurrency.Task {
+                        await refreshIfNeeded()
                     }
                 }
                 
                 // Sort controls for Following and Recent tabs
-                if selectedFilter == 0 || selectedFilter == 2 {
+                if selectedFilter == 0 || selectedFilter == 1 {
                     HStack {
                         Spacer()
                         Menu {
@@ -103,13 +77,13 @@ struct FeedView: View {
                                 // Following sort options
                                 Button {
                                     followingSort = .all
-                                    Task { await loadEssays() }
+                                    _Concurrency.Task { await loadEssays() }
                                 } label: {
                                     Label("All", systemImage: followingSort == .all ? "checkmark" : "")
                                 }
                                 Button {
                                     followingSort = .friendsOnly
-                                    Task { await loadEssays() }
+                                    _Concurrency.Task { await loadEssays() }
                                 } label: {
                                     Label("Friends Only", systemImage: followingSort == .friendsOnly ? "checkmark" : "")
                                 }
@@ -117,19 +91,19 @@ struct FeedView: View {
                                 // Recent sort options
                                 Button {
                                     recentSort = .date
-                                    Task { await loadEssays() }
+                                    _Concurrency.Task { await loadEssays() }
                                 } label: {
                                     Label("Date", systemImage: recentSort == .date ? "checkmark" : "")
                                 }
                                 Button {
                                     recentSort = .likes
-                                    Task { await loadEssays() }
+                                    _Concurrency.Task { await loadEssays() }
                                 } label: {
                                     Label("Likes", systemImage: recentSort == .likes ? "checkmark" : "")
                                 }
                                 Button {
                                     recentSort = .trending
-                                    Task { await loadEssays() }
+                                    _Concurrency.Task { await loadEssays() }
                                 } label: {
                                     Label("Trending", systemImage: recentSort == .trending ? "checkmark" : "")
                                 }
@@ -151,78 +125,27 @@ struct FeedView: View {
                     .padding(.bottom, 8)
                 }
                 
-                // Feed content
+                // Feed content - Clean beige background with paper essay cards
                 if isLoading {
                     ProgressView()
                         .padding()
-                } else if selectedFilter == 3 {
-                    // By Topic view - show topic cards or selected topic essays
-                    if let selectedTopic = selectedTopic {
-                        // Show essays for selected topic
-                        TopicDetailView(topic: selectedTopic, onBack: { self.selectedTopic = nil })
-                    } else if topicGroups.isEmpty {
-                        // Empty state
-                        VStack(spacing: 16) {
-                            Image(systemName: "square.grid.2x2")
-                                .font(.system(size: 60))
-                                .foregroundStyle(.secondary)
-                            Text("No past topics yet")
-                                .font(.headline)
-                                .foregroundStyle(.secondary)
-                            Text("Check back tomorrow for your first topic archive")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    } else {
-                        // Show topic cards grid
-                        TopicCardsView(topics: topicGroups, sort: $topicSort, onSelect: { topic in
-                            self.selectedTopic = topic
-                        })
-                    }
                 } else {
-                    List {
-                        ForEach(essayItems) { item in
-                            EssayCard(essay: item.essay, author: item.author)
-                                .id(item.id) // Use stable ID from EssayItem
-                                .listRowSeparator(.hidden)
-                                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                                .buttonStyle(.borderless) // Prevent list selection from interfering
+                    ScrollView {
+                        LazyVStack(spacing: 12) {
+                            ForEach(essayItems) { item in
+                                CleanPaperCard(
+                                    essay: item.essay,
+                                    author: item.author
+                                )
+                            }
                         }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 16)
+                        .padding(.bottom, 100) // Space for tab bar
                     }
-                    .listStyle(.plain)
                     .refreshable {
                         await loadEssays()
                     }
-                    // High priority gesture for filter switching
-                    .highPriorityGesture(
-                        DragGesture(minimumDistance: 30, coordinateSpace: .local)
-                            .onEnded { value in
-                                // Only handle horizontal swipes
-                                guard abs(value.translation.width) > abs(value.translation.height) else { return }
-                                
-                                let threshold: CGFloat = 80
-                                if value.translation.width < -threshold {
-                                    // Swipe left - next filter
-                                    if selectedFilter < filters.count - 1 {
-                                        withAnimation(.easeInOut) {
-                                            selectedTopic = nil
-                                            selectedFilter += 1
-                                            Task { await loadEssays() }
-                                        }
-                                    }
-                                } else if value.translation.width > threshold {
-                                    // Swipe right - previous filter
-                                    if selectedFilter > 0 {
-                                        withAnimation(.easeInOut) {
-                                            selectedTopic = nil
-                                            selectedFilter -= 1
-                                            Task { await loadEssays() }
-                                        }
-                                    }
-                                }
-                            }
-                    )
                 }
             }
             .navigationTitle("Feed".localized)
@@ -246,15 +169,18 @@ struct FeedView: View {
         }
         .onChange(of: navigateToEssayId) { _, newEssayId in
             if let essayId = newEssayId {
-                Task {
+                _Concurrency.Task {
                     await navigateToEssay(essayId: essayId)
                     navigateToEssayId = nil // Reset after handling
                 }
             }
         }
     }
-    
-    private func navigateToEssay(essayId: String) async {
+}
+
+// MARK: - Helper Methods
+
+private func navigateToEssay(essayId: String) async {
         // Check if essay is already in the list
         if let existingItem = essayItems.first(where: { $0.essay.id == essayId }) {
             selectedEssayForDetail = existingItem.essay
@@ -290,6 +216,9 @@ struct FeedView: View {
                     let myEssays = try await FirebaseService.shared.getUserEssays(userId: userId)
                     var combined = followingEssays + myEssays
                     
+                    // Filter out deleted essays
+                    combined = combined.filter { $0.deletedAt == nil }
+                    
                     // Remove duplicates
                     var seenIds = Set<String>()
                     combined = combined.filter { essay in
@@ -308,16 +237,7 @@ struct FeedView: View {
                     
                     loadedEssays = combined.sorted { $0.createdAt > $1.createdAt }.prefix(50).map { $0 }
                 }
-            case 1: // Today - today's keyword essays only
-                if let userId = currentUserId {
-                    let allEssays = try await FirebaseService.shared.getDailyEssays(userId: userId, limit: 50)
-                    let calendar = Calendar.current
-                    let today = calendar.startOfDay(for: Date())
-                    let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)!
-                    loadedEssays = allEssays.filter { $0.createdAt >= today && $0.createdAt < tomorrow }
-                        .sorted { $0.createdAt > $1.createdAt }
-                }
-            case 2: // Recent with sort
+            case 1: // Recent with sort
                 if let userId = currentUserId {
                     var allEssays = try await FirebaseService.shared.getDailyEssays(userId: userId, limit: 100)
                     switch recentSort {
@@ -334,8 +254,6 @@ struct FeedView: View {
                         }
                     }
                 }
-            case 3: // By Topic - past keywords
-                topicGroups = try await getTopicGroups()
             default:
                 if let userId = currentUserId {
                     loadedEssays = try await FirebaseService.shared.getDailyEssays(userId: userId, limit: 50)
@@ -353,49 +271,78 @@ struct FeedView: View {
         isLoading = false
     }
     
-    private func getTopicGroups() async throws -> [TopicGroup] {
-        // Get all past keywords from archive
-        let pastKeywords = try await KeywordsService.shared.getPastKeywords()
-        print("DEBUG: Found \(pastKeywords.count) past keywords in archive")
+    // Refresh data in background without clearing existing data
+    private func refreshIfNeeded() async {
+        // Skip if already loading
+        if isLoading { return }
         
-        // Get essay counts for each keyword
-        var topicGroups: [TopicGroup] = []
-        
-        for keywordArchive in pastKeywords {
-            // Get essays for this keyword
-            let essays = try await getEssaysForKeyword(keywordArchive.keyword)
+        do {
+            var loadedEssays: [Essay] = []
+            let currentUserId = Auth.auth().currentUser?.uid
             
-            let topicGroup = TopicGroup(
-                keyword: keywordArchive.keyword,
-                essays: essays,
-                emoji: keywordArchive.emoji
-            )
-            topicGroups.append(topicGroup)
-        }
-        
-        print("DEBUG: Created \(topicGroups.count) topic groups")
-        return topicGroups
-    }
-    
-    private func getEssaysForKeyword(_ keyword: String) async throws -> [Essay] {
-        let db = FirebaseFirestore.Firestore.firestore()
-        let snapshot = try await db.collection("essays")
-            .whereField("keyword", isEqualTo: keyword)
-            .whereField("isDraft", isEqualTo: false)
-            .whereField("visibility", isEqualTo: "public") // Only public essays
-            .order(by: "createdAt", descending: true)
-            .getDocuments()
-        
-        return snapshot.documents.compactMap { doc in
-            do {
-                var essay = try doc.data(as: Essay.self)
-                if essay.id == nil {
-                    essay.id = doc.documentID
+            switch selectedFilter {
+            case 0: // Following with sort
+                if let userId = currentUserId {
+                    var followingEssays = try await FirebaseService.shared.getFollowingEssays(userId: userId)
+                    let myEssays = try await FirebaseService.shared.getUserEssays(userId: userId)
+                    var combined = followingEssays + myEssays
+                    
+                    // Filter out deleted essays
+                    combined = combined.filter { $0.deletedAt == nil }
+                    
+                    // Remove duplicates
+                    var seenIds = Set<String>()
+                    combined = combined.filter { essay in
+                        guard let id = essay.id else { return false }
+                        if seenIds.contains(id) { return false }
+                        seenIds.insert(id)
+                        return true
+                    }
+                    
+                    // Apply Friends Only filter if selected
+                    if followingSort == .friendsOnly {
+                        let profile = try await FirebaseService.shared.getUserProfile(userId: userId)
+                        let friendIds = Set(profile?.friends ?? [])
+                        combined = combined.filter { friendIds.contains($0.authorId) }
+                    }
+                    
+                    loadedEssays = combined.sorted { $0.createdAt > $1.createdAt }.prefix(50).map { $0 }
                 }
-                return essay
-            } catch {
-                return nil
+            case 1: // Recent with sort
+                if let userId = currentUserId {
+                    var allEssays = try await FirebaseService.shared.getDailyEssays(userId: userId, limit: 100)
+                    switch recentSort {
+                    case .date:
+                        loadedEssays = allEssays.sorted { $0.createdAt > $1.createdAt }
+                    case .likes:
+                        loadedEssays = allEssays.sorted { $0.likesCount > $1.likesCount }
+                    case .trending:
+                        // Trending = combination of recent + likes
+                        loadedEssays = allEssays.sorted {
+                            let score1 = $0.likesCount + Int($0.commentsCount)
+                            let score2 = $1.likesCount + Int($1.commentsCount)
+                            return score1 > score2
+                        }
+                    }
+                }
+            default:
+                if let userId = currentUserId {
+                    loadedEssays = try await FirebaseService.shared.getDailyEssays(userId: userId, limit: 50)
+                } else {
+                    loadedEssays = try await FirebaseService.shared.getDailyEssays(limit: 50)
+                }
             }
+            
+            // Fetch author profiles for all essays
+            let newItems = await enrichWithAuthors(essays: loadedEssays)
+            
+            // Only update if we got new data
+            await MainActor.run {
+                essayItems = newItems
+            }
+            
+        } catch {
+            print("Error refreshing essays: \(error.localizedDescription)")
         }
     }
     
@@ -430,14 +377,19 @@ struct FeedView: View {
     }
 }
 
-struct EssayCard: View {
+// MARK: - Clean Paper Card
+// Individual paper sheet card like the reference image
+struct CleanPaperCard: View {
     let essay: Essay
     let author: UserProfile?
-    @StateObject private var themeManager = ThemeManager.shared
+    
     @State private var isLiked = false
     @State private var likeCount: Int
     @State private var showingDetail = false
-    @State private var showingAuthorProfile = false
+    @State private var selectedKeyword: String? = nil
+    
+    private let indigoColor = Color(hex: "0D244D")
+    private let paperColor = Color(hex: "FDFBF7")
     
     init(essay: Essay, author: UserProfile?) {
         self.essay = essay
@@ -450,146 +402,158 @@ struct EssayCard: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Author header (tappable to view profile)
-            Button {
-                showingAuthorProfile = true
-            } label: {
-                HStack {
-                    // Author avatar
-                    if let author = author {
-                        AvatarView(url: author.profilePhotoUrl, size: 40, userId: author.userId)
-                    } else {
-                        Circle()
-                            .fill(themeManager.accent.opacity(0.2))
-                            .frame(width: 40, height: 40)
-                            .overlay {
-                                Image(systemName: "person.fill")
-                                    .foregroundStyle(themeManager.accent)
+        Button {
+            showingDetail = true
+        } label: {
+            ZStack {
+                // Clean paper background with subtle shadow
+                Rectangle()
+                    .fill(paperColor)
+                    .shadow(
+                        color: Color.black.opacity(0.04),
+                        radius: 6,
+                        x: 1,
+                        y: 2
+                    )
+                
+                // Content
+                VStack(alignment: .leading, spacing: 0) {
+                    // Author row
+                    HStack(spacing: 10) {
+                        // Avatar
+                        if let author = author, let photoUrl = author.profilePhotoUrl, let url = URL(string: photoUrl) {
+                            AsyncImage(url: url) { phase in
+                                switch phase {
+                                case .success(let image):
+                                    image
+                                        .resizable()
+                                        .scaledToFill()
+                                default:
+                                    Circle()
+                                        .fill(indigoColor.opacity(0.08))
+                                        .overlay(
+                                            Image(systemName: "person.fill")
+                                                .foregroundStyle(indigoColor.opacity(0.4))
+                                                .font(.system(size: 12))
+                                        )
+                                }
                             }
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 2) {
+                            .frame(width: 28, height: 28)
+                            .clipShape(Circle())
+                        } else {
+                            Circle()
+                                .fill(indigoColor.opacity(0.08))
+                                .frame(width: 28, height: 28)
+                                .overlay(
+                                    Image(systemName: "person.fill")
+                                        .foregroundStyle(indigoColor.opacity(0.4))
+                                        .font(.system(size: 12))
+                                )
+                        }
+                        
                         Text(displayName)
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                        Text("\(timeAgo(from: essay.createdAt)) · \("Prompt".localized): \(essay.keyword)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    
-                    Spacer()
-                    
-                    // Visibility icon
-                    Image(systemName: essay.visibility.icon)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .buttonStyle(.plain)
-            .sheet(isPresented: $showingAuthorProfile) {
-                NavigationStack {
-                    ProfileView(userId: essay.authorId, onSignOut: nil)
-                }
-            }
-            
-            // Essay preview (tappable to view full) - isolated from interaction bar
-            Button {
-                showingDetail = true
-            } label: {
-                VStack(alignment: .leading, spacing: 12) {
-                    // Keyword badge with emoji
-                    HStack {
-                        let emoji = KeywordEmojiService.shared.emojiForKeyword(essay.keyword)
-                        Text("\(emoji) \(essay.keyword.isEmpty ? "No keyword" : essay.keyword)")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(colorForKeyword(essay.keyword))
-                            )
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(indigoColor.opacity(0.8))
+                        
                         Spacer()
+                        
+                        Text(timeAgo(from: essay.createdAt))
+                            .font(.system(size: 11))
+                            .foregroundStyle(indigoColor.opacity(0.35))
                     }
+                    .padding(.horizontal, 18)
+                    .padding(.top, 16)
+                    .padding(.bottom, 10)
                     
-                    if !essay.title.isEmpty {
-                        Text(essay.title)
-                            .font(.headline)
-                            .foregroundStyle(.primary)
-                    }
+                    // Thin separator
+                    Rectangle()
+                        .fill(indigoColor.opacity(0.06))
+                        .frame(height: 0.5)
+                        .padding(.horizontal, 18)
                     
-                    Text(essay.content)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(3)
-                        .multilineTextAlignment(.leading)
-                }
-                .padding(.vertical, 12) // Increased vertical padding for larger tap area
-                .frame(maxWidth: .infinity, alignment: .leading) // Full width
-            }
-            .buttonStyle(.plain)
-            .contentShape(Rectangle())
-            
-            // Spacer to ensure separation from interaction bar
-            Spacer()
-                .frame(height: 4)
-            
-            // Interaction bar - completely isolated from above content
-            HStack(spacing: 20) {
-                // Like button - isolated with explicit hit testing
-                Button {
-                    print("[DEBUG] Like button tapped - essayId: \(essay.id ?? "nil")")
-                    toggleLike()
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: isLiked ? "heart.fill" : "heart")
-                            .frame(width: 20, height: 20)
-                        Text("\(likeCount)")
+                    // Content area
+                    VStack(alignment: .leading, spacing: 8) {
+                        // Keyword - clickable badge
+                        HStack {
+                            Button {
+                                selectedKeyword = essay.keyword
+                            } label: {
+                                let emoji = KeywordEmojiService.shared.emojiForKeyword(essay.keyword)
+                                Text("\(emoji) \(essay.keyword)")
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundStyle(indigoColor.opacity(0.5))
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            
+                            Spacer()
+                        }
+                        
+                        // Navigation to KeywordBrowseView
+                        .sheet(isPresented: Binding(
+                            get: { selectedKeyword != nil },
+                            set: { if !$0 { selectedKeyword = nil } }
+                        )) {
+                            if let keyword = selectedKeyword {
+                                KeywordBrowseView(keyword: keyword)
+                            }
+                        }
+                        
+                        // Title
+                        if !essay.title.isEmpty {
+                            Text(essay.title)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(indigoColor)
+                                .lineLimit(2)
+                        }
+                        
+                        // Preview text
+                        Text(essay.content)
+                            .font(.system(size: 14))
+                            .foregroundStyle(indigoColor.opacity(0.65))
+                            .lineSpacing(3)
+                            .lineLimit(3)
+                            .multilineTextAlignment(.leading)
                     }
-                    .font(.subheadline)
-                    .foregroundStyle(isLiked ? .red : .secondary)
-                    .contentShape(Rectangle())
-                    .background(Color.clear) // Force clear background
-                }
-                .buttonStyle(.plain)
-                .frame(minWidth: 44, minHeight: 44) // Minimum tappable area
-                
-                // Comment button - isolated
-                Button {
-                    print("[DEBUG] Comment button tapped")
-                    showingDetail = true
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "bubble.left")
-                            .frame(width: 20, height: 20)
-                        Text("\(essay.commentsCount)")
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 12)
+                    
+                    // Bottom stats row
+                    HStack(spacing: 16) {
+                        HStack(spacing: 4) {
+                            Image(systemName: isLiked ? "heart.fill" : "heart")
+                                .font(.system(size: 12))
+                                .foregroundStyle(isLiked ? Color(hex: "C2441C") : indigoColor.opacity(0.35))
+                            Text("\(likeCount)")
+                                .font(.system(size: 12))
+                                .foregroundStyle(indigoColor.opacity(0.5))
+                        }
+                        
+                        HStack(spacing: 4) {
+                            Image(systemName: "bubble.right")
+                                .font(.system(size: 12))
+                                .foregroundStyle(indigoColor.opacity(0.35))
+                            Text("\(essay.commentsCount)")
+                                .font(.system(size: 12))
+                                .foregroundStyle(indigoColor.opacity(0.5))
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: essay.visibility == .public ? "globe" : "lock")
+                            .font(.system(size: 11))
+                            .foregroundStyle(indigoColor.opacity(0.3))
                     }
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .contentShape(Rectangle())
-                    .background(Color.clear)
+                    .padding(.horizontal, 18)
+                    .padding(.bottom, 14)
                 }
-                .buttonStyle(.plain)
-                .frame(minWidth: 44, minHeight: 44)
-                
-                Spacer()
             }
-            // Explicitly disable gesture propagation
-            .simultaneousGesture(TapGesture(), including: .none)
-            .background(Color.clear)
         }
-        .padding()
-        .background(Color(.systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: .black.opacity(0.05), radius: 8)
+        .buttonStyle(.plain)
         .onAppear {
-            // Update state when view appears
             likeCount = essay.likesCount
-            isLiked = false // Reset like state
+            isLiked = false
         }
         .onChange(of: essay.id) { _ in
-            // Update state when essay changes
             likeCount = essay.likesCount
             isLiked = false
         }
@@ -603,28 +567,6 @@ struct EssayCard: View {
                             }
                         }
                     }
-            }
-        }
-    }
-    
-    private func toggleLike() {
-        Task {
-            do {
-                if isLiked {
-                    try await FirebaseService.shared.unlikeEssay(essayId: essay.id ?? "")
-                    await MainActor.run {
-                        isLiked = false
-                        likeCount -= 1
-                    }
-                } else {
-                    try await FirebaseService.shared.likeEssay(essayId: essay.id ?? "")
-                    await MainActor.run {
-                        isLiked = true
-                        likeCount += 1
-                    }
-                }
-            } catch {
-                print("Error toggling like: \(error)")
             }
         }
     }
@@ -658,33 +600,55 @@ struct CommentsView: View {
     @State private var newComment = ""
     @Environment(\.dismiss) private var dismiss
     
+    private let indigoColor = Color(hex: "0D244D")
+    private let creamColor = Color(hex: "F5F0E8")
+    
     var body: some View {
         NavigationStack {
-            VStack {
-                List(comments) { comment in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(comment.authorName)
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                        Text(comment.content)
-                            .font(.body)
-                        Text(timeAgo(from: comment.createdAt))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.vertical, 4)
-                }
+            ZStack {
+                // Beige background
+                creamColor
+                    .ignoresSafeArea()
                 
-                HStack {
-                    TextField("Add a comment...".localized, text: $newComment)
-                        .textFieldStyle(.roundedBorder)
-                    
-                    Button("Post".localized) {
-                        postComment()
+                VStack(spacing: 0) {
+                    // Comments list with paper texture
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 16) {
+                            ForEach(comments) { comment in
+                                CommentRow(comment: comment)
+                                    .padding(.horizontal)
+                            }
+                        }
+                        .padding(.vertical)
                     }
-                    .disabled(newComment.isEmpty)
+                    
+                    // Input area
+                    HStack(spacing: 12) {
+                        TextField("Add a comment...".localized, text: $newComment)
+                            .font(.system(size: 15))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(Color.white)
+                                    .shadow(color: indigoColor.opacity(0.05), radius: 4, x: 0, y: 2)
+                            )
+                        
+                        Button {
+                            postComment()
+                        } label: {
+                            Image(systemName: "arrow.up.circle.fill")
+                                .font(.system(size: 32))
+                                .foregroundStyle(newComment.isEmpty ? indigoColor.opacity(0.3) : indigoColor)
+                        }
+                        .disabled(newComment.isEmpty)
+                    }
+                    .padding()
+                    .background(
+                        Color.white
+                            .shadow(color: indigoColor.opacity(0.05), radius: 8, x: 0, y: -4)
+                    )
                 }
-                .padding()
             }
             .navigationTitle("Comments".localized)
             .navigationBarTitleDisplayMode(.inline)
@@ -693,6 +657,7 @@ struct CommentsView: View {
                     Button("Done".localized) {
                         dismiss()
                     }
+                    .foregroundStyle(indigoColor)
                 }
             }
         }
@@ -710,7 +675,7 @@ struct CommentsView: View {
     }
     
     private func postComment() {
-        Task {
+        _Concurrency.Task {
             do {
                 try await FirebaseService.shared.addComment(essayId: essayId, content: newComment)
                 newComment = ""
@@ -728,234 +693,110 @@ struct CommentsView: View {
     }
 }
 
-// MARK: - Topic Cards View
-
-struct TopicCardsView: View {
-    let topics: [TopicGroup]
-    @Binding var sort: FeedView.TopicSort
-    let onSelect: (TopicGroup) -> Void
-    @StateObject private var themeManager = ThemeManager.shared
-    
-    var sortedTopics: [TopicGroup] {
-        switch sort {
-        case .keyword:
-            return topics.sorted { $0.keyword < $1.keyword }
-        case .date:
-            return topics.sorted {
-                guard let d1 = $0.essays.first?.createdAt,
-                      let d2 = $1.essays.first?.createdAt else { return false }
-                return d1 > d2
-            }
-        case .popular:
-            return topics.sorted { $0.essayCount > $1.essayCount }
-        }
-    }
-    
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                // Sort picker
-                HStack {
-                    Spacer()
-                    Menu {
-                        Button {
-                            sort = .keyword
-                        } label: {
-                            Label("Keyword", systemImage: sort == .keyword ? "checkmark" : "")
-                        }
-                        Button {
-                            sort = .date
-                        } label: {
-                            Label("Date", systemImage: sort == .date ? "checkmark" : "")
-                        }
-                        Button {
-                            sort = .popular
-                        } label: {
-                            Label("Popular", systemImage: sort == .popular ? "checkmark" : "")
-                        }
-                    } label: {
-                        HStack {
-                            Image(systemName: "arrow.up.arrow.down")
-                            Text(sort.rawValue)
-                                .font(.caption)
-                        }
-                        .foregroundStyle(themeManager.accent)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(themeManager.accent.opacity(0.1))
-                        .cornerRadius(8)
-                    }
-                }
-                .padding(.horizontal)
-                
-                // Topic cards grid
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 140))], spacing: 16) {
-                    ForEach(sortedTopics) { topic in
-                        TopicCard(topic: topic)
-                            .onTapGesture {
-                                onSelect(topic)
-                            }
-                    }
-                }
-                .padding(.horizontal)
-            }
-            .padding(.vertical)
-        }
-    }
-}
-
-// MARK: - Topic Card
-
-struct TopicCard: View {
-    let topic: TopicGroup
-    @StateObject private var themeManager = ThemeManager.shared
-    
-    var body: some View {
-        VStack(spacing: 12) {
-            Text(topic.emoji)
-                .font(.system(size: 40))
-            
-            Text(topic.keyword)
-                .font(.headline)
-                .lineLimit(1)
-            
-            Text("\(topic.essayCount) essays")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        .frame(minWidth: 140, minHeight: 140)
-        .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(16)
-        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
-    }
-}
-
-// MARK: - Topic Detail View
-
-struct TopicDetailView: View {
-    let topic: TopicGroup
-    let onBack: () -> Void
-    @StateObject private var themeManager = ThemeManager.shared
-    @State private var showingWriteSheet = false
-    
-    var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                // Header with back button and write button
-                HStack {
-                    Button(action: onBack) {
-                        HStack {
-                            Image(systemName: "chevron.left")
-                            Text("Back".localized)
-                        }
-                    }
-                    .foregroundStyle(themeManager.accent)
-                    
-                    Spacer()
-                    
-                    // Write on past topic button
-                    Button {
-                        showingWriteSheet = true
-                    } label: {
-                        HStack {
-                            Image(systemName: "pencil")
-                            Text("Write".localized)
-                        }
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(themeManager.accent)
-                        .cornerRadius(8)
-                    }
-                }
-                .padding()
-                
-                // Topic header
-                VStack(spacing: 8) {
-                    Text(topic.emoji)
-                        .font(.system(size: 60))
-                    Text(topic.keyword)
-                        .font(.title)
-                        .fontWeight(.bold)
-                    Text("\(topic.essayCount) essays")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                .padding()
-                
-                Divider()
-                    .padding(.horizontal)
-                
-                // Essays list
-                LazyVStack(spacing: 12) {
-                    ForEach(topic.essays, id: \.id) { essay in
-                        TopicEssayRow(essay: essay)
-                    }
-                }
-                .padding()
-            }
-        }
-        .sheet(isPresented: $showingWriteSheet) {
-            // Open writing editor with past keyword
-            SimpleWritingEditorView(keyword: topic.keyword, isPastTopic: true)
-        }
-    }
-}
-
-// MARK: - Topic Essay Row
-
-struct TopicEssayRow: View {
-    let essay: Essay
-    @StateObject private var themeManager = ThemeManager.shared
-    @State private var authorName: String = ""
+// MARK: - Comment Row
+struct CommentRow: View {
+    let comment: Comment
+    private let indigoColor = Color(hex: "0D244D")
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
+            // Author and time
             HStack {
-                Text(essay.title.isEmpty ? "Untitled".localized : essay.title)
-                    .font(.headline)
-                    .lineLimit(2)
-                Spacer()
-                Text(timeAgo(from: essay.createdAt))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            
-            Text(essay.content)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .lineLimit(3)
-                .multilineTextAlignment(.leading)
-            
-            HStack {
-                Image(systemName: "heart.fill")
-                    .font(.caption)
-                    .foregroundStyle(.red)
-                Text("\(essay.likesCount)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                
-                Image(systemName: "bubble.left.fill")
-                    .font(.caption)
-                    .foregroundStyle(.blue)
-                    .padding(.leading, 8)
-                Text("\(essay.commentsCount)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(comment.authorName)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(indigoColor)
                 
                 Spacer()
+                
+                Text(timeAgo(from: comment.createdAt))
+                    .font(.system(size: 12))
+                    .foregroundStyle(indigoColor.opacity(0.5))
             }
+            
+            // Comment content
+            Text(comment.content)
+                .font(.system(size: 15))
+                .lineSpacing(4)
+                .foregroundStyle(indigoColor)
+                .padding(.vertical, 4)
         }
-        .padding()
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
     }
     
     private func timeAgo(from date: Date) -> String {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
         return formatter.localizedString(for: date, relativeTo: Date())
+    }
+}
+
+// MARK: - Paper Texture Background
+struct PaperTextureBackground: View {
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                // Base cream color
+                Color(hex: "F5F0E8")
+                
+                // Paper texture overlay
+                Canvas { context, size in
+                    // Draw subtle noise texture
+                    let rect = CGRect(origin: .zero, size: size)
+                    
+                    // Create a subtle grid pattern
+                    let gridSpacing: CGFloat = 4
+                    var path = Path()
+                    
+                    // Horizontal lines
+                    for y in stride(from: 0, to: size.height, by: gridSpacing) {
+                        path.move(to: CGPoint(x: 0, y: y))
+                        path.addLine(to: CGPoint(x: size.width, y: y))
+                    }
+                    
+                    // Vertical lines
+                    for x in stride(from: 0, to: size.width, by: gridSpacing) {
+                        path.move(to: CGPoint(x: x, y: 0))
+                        path.addLine(to: CGPoint(x: x, y: size.height))
+                    }
+                    
+                    context.stroke(
+                        path,
+                        with: .color(Color(hex: "E8E0D0").opacity(0.3)),
+                        lineWidth: 0.5
+                    )
+                    
+                    // Add some random speckles for paper texture
+                    for _ in 0..<5000 {
+                        let x = CGFloat.random(in: 0..<size.width)
+                        let y = CGFloat.random(in: 0..<size.height)
+                        let size = CGFloat.random(in: 0.5...1.5)
+                        
+                        let speckle = Path(ellipseIn: CGRect(
+                            x: x,
+                            y: y,
+                            width: size,
+                            height: size
+                        ))
+                        
+                        context.fill(
+                            speckle,
+                            with: .color(Color(hex: "D4C8B8").opacity(0.2))
+                        )
+                    }
+                }
+                
+                // Subtle vignette effect
+                RadialGradient(
+                    colors: [
+                        Color.clear,
+                        Color(hex: "E8E0D0").opacity(0.1)
+                    ],
+                    center: .center,
+                    startRadius: geometry.size.width * 0.3,
+                    endRadius: geometry.size.width * 0.8
+                )
+                .blendMode(.multiply)
+            }
+        }
     }
 }
 

@@ -16,11 +16,14 @@ struct WritingAnalyticsView: View {
     }
     
     var totalWords: Int {
-        essays.reduce(0) { $0 + $1.content.filter { !$0.isWhitespace }.count }
+        // Filter out deleted essays
+        let nonDeletedEssays = essays.filter { $0.deletedAt == nil }
+        return nonDeletedEssays.reduce(0) { $0 + $1.content.filter { !$0.isWhitespace }.count }
     }
     
     var totalEssays: Int {
-        essays.count
+        // Filter out deleted essays
+        return essays.filter { $0.deletedAt == nil }.count
     }
     
     var averageWordsPerEssay: Int {
@@ -32,7 +35,9 @@ struct WritingAnalyticsView: View {
     }
     
     var writingDays: Set<Date> {
-        Set(essays.map { Calendar.current.startOfDay(for: $0.createdAt) })
+        // Filter out deleted essays
+        let nonDeletedEssays = essays.filter { $0.deletedAt == nil }
+        return Set(nonDeletedEssays.map { Calendar.current.startOfDay(for: $0.createdAt) })
     }
     
     var body: some View {
@@ -147,7 +152,9 @@ struct WritingAnalyticsView: View {
     
     private func findBestWritingDay() -> (day: String, count: Int)? {
         let calendar = Calendar.current
-        let weekdayCounts = essays.reduce(into: [Int: Int]()) { counts, essay in
+        // Filter out deleted essays
+        let nonDeletedEssays = essays.filter { $0.deletedAt == nil }
+        let weekdayCounts = nonDeletedEssays.reduce(into: [Int: Int]()) { counts, essay in
             let weekday = calendar.component(.weekday, from: essay.createdAt)
             counts[weekday, default: 0] += 1
         }
@@ -237,7 +244,7 @@ struct StatCard: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding()
-        .background(Color(.systemBackground))
+        .background(Color(hex: "FDFBF7"))
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.05), radius: 8)
     }
@@ -269,7 +276,7 @@ struct WritingActivityChart: View {
             }
         }
         .padding()
-        .background(Color(.systemBackground))
+        .background(Color(hex: "FDFBF7"))
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
     
@@ -336,7 +343,7 @@ struct WeeklyPatternView: View {
             }
         }
         .padding()
-        .background(Color(.systemBackground))
+        .background(Color(hex: "FDFBF7"))
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
     

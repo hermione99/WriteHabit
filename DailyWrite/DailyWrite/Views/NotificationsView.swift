@@ -8,41 +8,56 @@ struct NotificationsView: View {
     @StateObject private var themeManager = ThemeManager.shared
     @Environment(\.dismiss) private var dismiss
     
+    // Navigation states for essay detail
+    @State private var selectedEssayId: String? = nil
+    @State private var selectedEssay: Essay? = nil
+    @State private var showEssayDetail = false
+    @State private var showPublicProfile = false
+    @State private var selectedUserId: String? = nil
+    
     var body: some View {
         NavigationStack {
-            List {
-                if isLoading {
-                    ProgressView()
-                        .frame(maxWidth: .infinity)
+            ZStack {
+                Color(hex: "F5F0E8")
+                    .ignoresSafeArea()
+                
+                List {
+                    if isLoading {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                    } else if notifications.isEmpty {
+                        VStack(spacing: 16) {
+                            Image(systemName: "bell.slash")
+                                .font(.system(size: 60))
+                                .foregroundStyle(.secondary.opacity(0.5))
+                            Text("No notifications yet".localized)
+                                .font(.headline)
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .padding()
-                } else if notifications.isEmpty {
-                    VStack(spacing: 16) {
-                        Image(systemName: "bell.slash")
-                            .font(.system(size: 60))
-                            .foregroundStyle(.secondary.opacity(0.5))
-                        Text("No notifications yet".localized)
-                            .font(.headline)
-                            .foregroundStyle(.secondary)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding()
-                } else {
-                    ForEach(notifications) { notification in
-                        NotificationRow(notification: notification)
-                            .onTapGesture {
-                                handleNotificationTap(notification)
-                            }
-                            .swipeActions(edge: .trailing) {
-                                Button(role: .destructive) {
-                                    deleteNotification(notification)
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
+                    } else {
+                        ForEach(notifications) { notification in
+                            NotificationRow(notification: notification)
+                                .onTapGesture {
+                                    handleNotificationTap(notification)
                                 }
-                            }
+                                .swipeActions(edge: .trailing) {
+                                    Button(role: .destructive) {
+                                        deleteNotification(notification)
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                }
+                                .listRowBackground(Color(hex: "F5F0E8"))
+                                .listRowSeparator(.hidden)
+                        }
                     }
                 }
+                .listStyle(.plain)
+                .background(Color.clear)
             }
-            .listStyle(.plain)
             .navigationTitle("Notifications".localized)
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
@@ -52,6 +67,14 @@ struct NotificationsView: View {
                     }
                 }
             }
+            .navigationDestination(isPresented: $showPublicProfile) {
+                if let userId = selectedUserId {
+                    PublicProfileView(userId: userId)
+                }
+            }
+        }
+        .sheet(item: $selectedEssay) { essay in
+            EssayDetailView(essay: essay)
         }
         .task {
             await loadNotifications()
@@ -129,17 +152,32 @@ struct NotificationsView: View {
             }
         }
         
-        // Navigate to the essay (using the relatedId from notification)
-        if let essayId = notification.relatedId {
-            // Post notification for navigation
-            NotificationCenter.default.post(
-                name: NSNotification.Name("NavigateToEssay"),
-                object: nil,
-                userInfo: ["essayId": essayId]
-            )
-            
-            // Dismiss this view
+        // Handle different notification types
+        switch notification.type {
+        case .follow:
+            // Navigate to follower's profile
+            if let followerId = notification.relatedId {
+                selectedUserId = followerId
+                showPublicProfile = true
+            }
+        case .friendRequest:
+            // Open friends view (could be handled differently)
             dismiss()
+            NotificationCenter.default.post(name: NSNotification.Name("OpenFriends"), object: nil)
+        case .comment, .reply, .like:
+            // Navigate to the essay
+            if let essayId = notification.relatedId {
+                Task {
+                    do {
+                        let essay = try await FirebaseService.shared.getEssay(id: essayId)
+                        await MainActor.run {
+                            selectedEssay = essay
+                        }
+                    } catch {
+                        print("Error loading essay: \(error)")
+                    }
+                }
+            }
         }
     }
 }
@@ -148,14 +186,17 @@ struct NotificationRow: View {
     let notification: InAppNotification
     @StateObject private var themeManager = ThemeManager.shared
     
+    // Moss shadow color for icons
+    private let mossShadowColor = Color(hex: "4A5A30")
+    
     var body: some View {
         HStack(spacing: 12) {
             // Icon based on type
             Image(systemName: iconName)
                 .font(.title2)
-                .foregroundStyle(themeManager.accent)
+                .foregroundStyle(mossShadowColor)
                 .frame(width: 40, height: 40)
-                .background(themeManager.accent.opacity(0.1))
+                .background(mossShadowColor.opacity(0.1))
                 .clipShape(Circle())
             
             VStack(alignment: .leading, spacing: 4) {
@@ -179,11 +220,12 @@ struct NotificationRow: View {
             // Unread indicator
             if !notification.isRead {
                 Circle()
-                    .fill(themeManager.accent)
+                    .fill(mossShadowColor)
                     .frame(width: 8, height: 8)
             }
         }
         .padding(.vertical, 4)
+        .background(Color(hex: "F5F0E8"))
     }
     
     private var iconName: String {

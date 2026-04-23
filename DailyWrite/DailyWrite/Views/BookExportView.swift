@@ -24,7 +24,11 @@ struct BookExportView: View {
     
     var body: some View {
         NavigationStack {
-            List {
+            ZStack {
+                Color(hex: "F5F0E8")
+                    .ignoresSafeArea()
+                
+                List {
                 // Book cover preview section
                 Section {
                     VStack(spacing: 16) {
@@ -40,6 +44,8 @@ struct BookExportView: View {
                             .multilineTextAlignment(.center)
                     }
                     .padding(.vertical, 8)
+                    .background(Color(hex: "FDFBF7"))
+                    .listRowBackground(Color(hex: "FDFBF7"))
                 }
                 
                 // Format selection
@@ -50,7 +56,9 @@ struct BookExportView: View {
                         }
                     }
                     .pickerStyle(.segmented)
+                    .background(Color(hex: "FDFBF7"))
                 }
+                .listRowBackground(Color(hex: "FDFBF7"))
                 
                 // Essay selection
                 Section {
@@ -85,6 +93,7 @@ struct BookExportView: View {
                         }
                     }
                 }
+                .listRowBackground(Color(hex: "FDFBF7"))
                 
                 // Export button
                 Section {
@@ -104,7 +113,14 @@ struct BookExportView: View {
                     }
                     .disabled(selectedCount == 0)
                 }
+                .listRowBackground(Color(hex: "FDFBF7"))
             }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(Color.clear)
+            .environment(\.colorScheme, .light)
+            }
+            .background(Color(hex: "F5F0E8"))
             .navigationTitle("Create Book".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -133,7 +149,7 @@ struct BookExportView: View {
         
         do {
             essays = try await FirebaseService.shared.getUserEssays(userId: userId)
-                .filter { !$0.isDraft }
+                .filter { $0.deletedAt == nil && !$0.isDraft }
                 .sorted { $0.createdAt > $1.createdAt }
         } catch {
             print("Error loading essays: \(error)")
@@ -184,42 +200,128 @@ struct BookCoverPreview: View {
     
     var body: some View {
         ZStack {
-            // Gradient background
-            LinearGradient(
-                colors: [.blue.opacity(0.8), .purple.opacity(0.8)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            // SF Symbol folder only
+            Image(systemName: "folder.fill")
+                .resizable()
+                .foregroundColor(Color(hex: "4A5A30"))
             
-            // Decorative elements
-            VStack(spacing: 12) {
+            // Content
+            VStack(spacing: 6) {
                 Spacer()
+                    .frame(height: 70)
                 
-                Image(systemName: "book.closed.fill")
-                    .font(.system(size: 48))
-                    .foregroundStyle(.white.opacity(0.3))
+                Text("\(essayCount)")
+                    .font(.system(size: 36, weight: .bold))
+                    .foregroundColor(.white)
                 
-                Text(title)
-                    .font(.title2.weight(.bold))
-                    .foregroundStyle(.white)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .padding(.horizontal)
+                Text("essays")
+                    .font(.system(size: 12))
+                    .foregroundColor(Color(hex: "D0C8B8"))
                 
-                Text("\(essayCount) essays".localized)
-                    .font(.subheadline)
-                    .foregroundStyle(.white.opacity(0.8))
+                Spacer()
                 
                 Text(date.formatted(date: .abbreviated, time: .omitted))
-                    .font(.caption)
-                    .foregroundStyle(.white.opacity(0.6))
-                
-                Spacer()
+                    .font(.system(size: 10))
+                    .foregroundColor(Color(hex: "D0C8B8"))
+                    .padding(.bottom, 16)
             }
-            .padding()
         }
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-        .shadow(radius: 4)
+        .frame(width: 220, height: 170)
+        .shadow(color: Color.black.opacity(0.2), radius: 8, x: 0, y: 4)
+    }
+}
+
+// Paper view
+struct PaperView: View {
+    var body: some View {
+        ZStack(alignment: .top) {
+            RoundedRectangle(cornerRadius: 5)
+                .fill(Color(hex: "F5F0E8"))
+            
+            // Text lines
+            VStack(spacing: 4) {
+                ForEach(0..<3) { i in
+                    RoundedRectangle(cornerRadius: 1)
+                        .fill(Color(hex: "C8C0B0"))
+                        .frame(width: i == 0 ? 45 : 60, height: 3)
+                }
+            }
+            .padding(.top, 12)
+        }
+        .frame(width: 75, height: 60)
+    }
+}
+
+// Folder back with flag on right - rounded corners
+struct FolderBack: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let flagWidth: CGFloat = 50
+        let flagHeight: CGFloat = 32
+        let cornerRadius: CGFloat = 20  // Rounder corners
+        
+        // Start at top-left of main body (after potential tab area)
+        path.move(to: CGPoint(x: 0, y: flagHeight))
+        
+        // Top edge to flag with rounded start
+        path.addLine(to: CGPoint(x: rect.width - flagWidth, y: flagHeight))
+        
+        // Flag with rounded top-left
+        path.addQuadCurve(
+            to: CGPoint(x: rect.width - flagWidth, y: flagHeight - 5),
+            control: CGPoint(x: rect.width - flagWidth, y: flagHeight)
+        )
+        path.addLine(to: CGPoint(x: rect.width - flagWidth, y: 0))
+        path.addLine(to: CGPoint(x: rect.width, y: 0))
+        path.addLine(to: CGPoint(x: rect.width, y: flagHeight))
+        
+        // Right edge down with rounded corner
+        path.addLine(to: CGPoint(x: rect.width, y: rect.height - cornerRadius))
+        path.addQuadCurve(to: CGPoint(x: rect.width - cornerRadius, y: rect.height),
+                         control: CGPoint(x: rect.width, y: rect.height))
+        
+        // Bottom with rounded corners
+        path.addLine(to: CGPoint(x: cornerRadius, y: rect.height))
+        path.addQuadCurve(to: CGPoint(x: 0, y: rect.height - cornerRadius),
+                         control: CGPoint(x: 0, y: rect.height))
+        
+        // Left edge up
+        path.addLine(to: CGPoint(x: 0, y: flagHeight))
+        
+        path.closeSubpath()
+        return path
+    }
+}
+
+// Folder front - much shorter with rounded corners
+struct FolderFront: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let cornerRadius: CGFloat = 24  // Much rounder corners
+        let frontHeight: CGFloat = rect.height * 0.42  // Much shorter front
+        let cutoutY: CGFloat = 35  // Papers stick out more
+        
+        // Start top-left
+        path.move(to: CGPoint(x: 0, y: cutoutY))
+        
+        // Straight line across (opening for papers)
+        path.addLine(to: CGPoint(x: rect.width, y: cutoutY))
+        
+        // Right edge down with very round corner
+        path.addLine(to: CGPoint(x: rect.width, y: frontHeight - cornerRadius))
+        path.addQuadCurve(to: CGPoint(x: rect.width - cornerRadius, y: frontHeight),
+                         control: CGPoint(x: rect.width, y: frontHeight))
+        
+        // Bottom
+        path.addLine(to: CGPoint(x: cornerRadius, y: frontHeight))
+        path.addQuadCurve(to: CGPoint(x: 0, y: frontHeight - cornerRadius),
+                         control: CGPoint(x: 0, y: frontHeight))
+        
+        // Left edge up to start
+        path.addLine(to: CGPoint(x: 0, y: cutoutY))
+        
+        path.closeSubpath()
+        return path
     }
 }
 

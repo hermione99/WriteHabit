@@ -6,19 +6,18 @@ import FirebaseFirestore
 import GoogleSignIn
 import AppTrackingTransparency
 import AdSupport
+import FirebaseInAppMessaging
 
 @main
 struct DailyWriteApp: App {
-    @StateObject private var themeManager = ThemeManager.shared
-    
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .preferredColorScheme(themeManager.currentTheme.colorScheme)
-                .tint(themeManager.accent)  // Set app-wide accent color
-                .accentColor(themeManager.accent)  // Fallback for older APIs
+                .preferredColorScheme(.light)  // Fixed to light theme
+                .tint(Color(hex: "0D244D"))  // Indigo Rain accent
+                .accentColor(Color(hex: "0D244D"))  // Fallback for older APIs
                 .onAppear {
                     // Initialize notification service (UNUserNotificationCenter delegate)
                     _ = NotificationService.shared
@@ -27,6 +26,9 @@ struct DailyWriteApp: App {
                     Task {
                         _ = await NotificationService.shared.requestAuthorization()
                     }
+                    
+                    // Disable Firebase In-App Messaging
+                    InAppMessaging.inAppMessaging().messageDisplaySuppressed = true
                 }
         }
     }

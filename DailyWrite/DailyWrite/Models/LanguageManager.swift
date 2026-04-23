@@ -2,27 +2,16 @@ import SwiftUI
 import Foundation
 
 enum AppLanguage: String, CaseIterable, Identifiable {
-    case english = "en"
     case korean = "ko"
     
     var id: String { rawValue }
     
     var displayName: String {
-        switch self {
-        case .english:
-            return "English"
-        case .korean:
-            return "한국어"
-        }
+        return "한국어"
     }
     
     var flag: String {
-        switch self {
-        case .english:
-            return "🇺🇸"
-        case .korean:
-            return "🇰🇷"
-        }
+        return "🇰🇷"
     }
 }
 
@@ -35,23 +24,19 @@ class LanguageManager: ObservableObject {
     private let hasSelectedKey = "hasSelectedLanguage"
     
     init() {
-        // Check if user has already selected a language
-        if let savedLanguage = UserDefaults.standard.string(forKey: languageKey),
-           let language = AppLanguage(rawValue: savedLanguage) {
-            currentLanguage = language
-            hasSelectedLanguage = true
-        }
-        
-        // Set the app's language
-        updateLanguage(currentLanguage)
+        // Force Korean language (English disabled for now)
+        currentLanguage = .korean
+        hasSelectedLanguage = true
+        updateLanguage(.korean)
     }
     
     func selectLanguage(_ language: AppLanguage) {
-        currentLanguage = language
+        // Only Korean is supported for now
+        currentLanguage = .korean
         hasSelectedLanguage = true
-        UserDefaults.standard.set(language.rawValue, forKey: languageKey)
+        UserDefaults.standard.set("ko", forKey: languageKey)
         UserDefaults.standard.set(true, forKey: hasSelectedKey)
-        updateLanguage(language)
+        updateLanguage(.korean)
     }
     
     private func updateLanguage(_ language: AppLanguage) {

@@ -7,7 +7,7 @@ struct SimpleWritingEditorView: View {
     let existingEssay: Essay?  // nil = new essay, non-nil = edit mode
     let isDraft: Bool  // true = draft, false = published essay
     let isPastTopic: Bool  // true = writing on past keyword (no streak impact)
-    
+
     @State private var title = ""
     @State private var content = ""  // Plain text for word count and storage
     @State private var attributedContent = NSAttributedString(string: "")  // Rich text
@@ -20,12 +20,13 @@ struct SimpleWritingEditorView: View {
     @State private var showingFormatMenu = false
     @State private var showingSaveDraftConfirmation = false
     @State private var showingExistingEssayAlert = false
+    @State private var showingVisibilitySheet = false  // Bottom sheet for visibility
     @State private var existingEssayForKeyword: Essay? = nil
     @State private var textView: UITextView?  // Reference to the underlying text view
     @State private var savedCursorLocation: Int = 0  // Save cursor position before sheet opens
     @State private var saveDraftTimer: Timer? = nil  // Debounce timer for auto-save
     @Environment(\.dismiss) private var dismiss
-    
+
     init(keyword: String, existingEssay: Essay? = nil, isDraft: Bool = false, isPastTopic: Bool = false) {
         self.keyword = keyword
         self.existingEssay = existingEssay
@@ -44,7 +45,7 @@ struct SimpleWritingEditorView: View {
                 _attributedContent = State(initialValue: NSAttributedString(string: essay.content))
             }
             _visibility = State(initialValue: essay.visibility)
-            
+
             // Restore saved font settings to FontManager when opening existing essay
             // Use async to avoid publishing during init
             if let fontName = essay.fontName,
@@ -65,11 +66,185 @@ struct SimpleWritingEditorView: View {
             }
         }
     }
-    
+
     var wordCount: Int {
         return content.filter { !$0.isWhitespace }.count
     }
-    
+
+    // Progress bar view like the mockup
+    private var progressBar: some View {
+        let goal = 300
+        let color: Color = {
+            if wordCount >= 300 { return Color(hex: "0D244D") }      // Complete - Indigo Rain (default)
+            else if wordCount >= 200 { return Color(hex: "4a5a30") }  // 200-299 - Moss Shadow
+            else if wordCount >= 100 { return Color(hex: "C2441C") }  // 100-199 - Burnt Nectar
+            else { return Color(hex: "852E47") }                       // 0-99 - Ruby Leaf
+        }()
+
+        return HStack(spacing: 8) {
+            // Progress bar
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 99)
+                        .fill(Color(hex: "e8e4dd"))
+                        .frame(height: 4)
+
+                    RoundedRectangle(cornerRadius: 99)
+                        .fill(color)
+                        .frame(width: geo.size.width * min(Double(wordCount) / Double(goal), 1.0), height: 4)
+                }
+            }
+            .frame(height: 4)
+
+            // Count text
+            if wordCount >= 300 {
+                Text("✓ 완료 가능")
+                    .font(.system(size: 11))
+                    .foregroundColor(Color(hex: "0D244D"))
+                    .transition(.opacity)
+            } else {
+                Text("\(wordCount) / \(goal)자")
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary)
+                    .frame(minWidth: 60, alignment: .trailing)
+            }
+        }
+    }
+
+    // MARK: - Visibility Bottom Sheet
+    private var visibilityBottomSheet: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                // Header
+                HStack {
+                    Spacer()
+                    Text("공개 범위 선택")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(.primary)
+                    Spacer()
+                }
+                .padding(.top, 16)
+                .padding(.bottom, 24)
+
+                // Visibility options
+                VStack(spacing: 8) {
+                    ForEach(EssayVisibility.allCases, id: \.self) { option in
+                        Button(action: {
+                            visibility = option
+                        }) {
+                            HStack(spacing: 14) {
+                                // Icon
+                                Text(visibilityIcon(for: option))
+                                    .font(.system(size: 22))
+
+                                // Text
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(option.displayName)
+                                        .font(.system(size: 15, weight: visibility == option ? .semibold : .regular))
+                                        .foregroundColor(.primary)
+                                    Text(visibilityDescription(for: option))
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.secondary)
+                                }
+
+                                Spacer()
+
+                                // Checkmark for selected
+                                if visibility == option {
+                                    Image(systemName: "checkmark")
+                                        .font(.system(size: 18, weight: .semibold))
+                                        .foregroundColor(Color(hex: "0D244D"))
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 14)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(visibility == option ? Color.white : Color.clear)
+                            )
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 16)
+
+                Spacer()
+
+                // Action buttons
+                VStack(spacing: 12) {
+                    // Save as Draft button
+                    Button(action: {
+                        showingVisibilitySheet = false
+                        saveDraft()
+                    }) {
+                        Text("임시저장")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(.primary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(
+                                RoundedRectangle(cornerRadius: 99)
+                                    .fill(Color(hex: "f5f3f0"))
+                            )
+                    }
+
+                    // Publish button
+                    Button(action: {
+                        showingVisibilitySheet = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            publishEssay()
+                        }
+                    }) {
+                        Text("게시하기")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(
+                                RoundedRectangle(cornerRadius: 99)
+                                    .fill(Color(hex: "0D244D"))
+                            )
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.vertical, 20)
+            }
+            .background(Color(hex: "f0ede8"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(action: {
+                        showingVisibilitySheet = false
+                    }) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.primary)
+                    }
+                }
+            }
+        }
+    }
+
+    private func visibilityIcon(for visibility: EssayVisibility) -> String {
+        switch visibility {
+        case .public: return "🌍"
+        case .friends: return "👥"
+        case .private: return "🔒"
+        }
+    }
+
+    private func visibilityDescription(for visibility: EssayVisibility) -> String {
+        switch visibility {
+        case .public: return "누구나 볼 수 있어요"
+        case .friends: return "팔로워만 볼 수 있어요"
+        case .private: return "나만 볼 수 있어요"
+        }
+    }
+
+    // MARK: - Bottom Toolbar with Tabs
+    @State private var activeTab = "서식"
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -85,75 +260,105 @@ struct SimpleWritingEditorView: View {
                             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                         }
                     }
-                
+
                 // Paper texture background
                 PaperBackgroundView()
-                
+                    .allowsHitTesting(false)
+
                 VStack(spacing: 0) {
-                    VStack(alignment: .leading, spacing: 16) {
-                        // Big keyword display
-                        VStack(alignment: .center, spacing: 8) {
-                            if isPastTopic {
-                                Text("Past Topic".localized)
-                                    .font(.caption)
-                                    .foregroundStyle(.orange)
-                                    .textCase(.uppercase)
-                            } else if existingEssay == nil {
-                                Text("Today's Prompt".localized)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .textCase(.uppercase)
-                            } else {
-                                Text(isDraft ? "Edit Draft".localized : "Edit Essay".localized)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .textCase(.uppercase)
-                            }
-                            
-                            Text(keyword)
-                                .font(.system(.largeTitle, design: .serif))
-                                .fontWeight(.bold)
-                                .foregroundStyle(.primary)
-                                .multilineTextAlignment(.center)
-                                .frame(maxWidth: .infinity)
+                    // Top Bar with cancel and complete buttons
+                    HStack {
+                        Button(action: {
+                            dismiss()
+                        }) {
+                            Text("Cancel".localized)
+                                .font(.system(size: 14))
+                                .foregroundColor(.primary)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(
+                                    Capsule()
+                                        .fill(Color.white)
+                                )
                         }
-                        .padding(.vertical, 20)
-                        
-                        // Title field - always system font
-                        TextField("Title".localized, text: $title)
-                            .font(.system(size: fontManager.writingFontSize + 6, weight: .semibold))
-                            .foregroundStyle(.primary)
-                            .multilineTextAlignment(.center)
-                        
-                        // Word count
-                        HStack {
-                            Spacer()
-                            Text("\(wordCount) \("words".localized)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                        .zIndex(100)
+
+                        Spacer()
+
+                        // Complete button - opens bottom sheet
+                        Button(action: {
+                            showingVisibilitySheet = true
+                        }) {
+                            Text("완료")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 18)
+                                .padding(.vertical, 8)
+                                .background(
+                                    Capsule()
+                                        .fill(Color(hex: "0D244D"))
+                                )
                         }
-                        
-                        // Content with rich text editing
-                        RichTextEditor(
-                            attributedText: $attributedContent,
-                            font: self.fontManager.currentFont.uiFont(size: self.fontManager.writingFontSize),
-                            textColor: UIColor.label,
-                            lineSpacing: self.fontManager.lineSpacing,
-                            onTextViewCreated: { textView in
-                                self.textView = textView
-                            },
-                            onTextChange: {
-                                // Real-time word count update
-                                self.content = self.attributedContent.string
+                        .zIndex(100)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+
+                    // Scrollable content
+                    ScrollView(showsIndicators: false) {
+                        VStack(spacing: 0) {
+                            // Big keyword display
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(isPastTopic ? "Past Topic".localized : (existingEssay == nil ? "Today's Prompt".localized : (isDraft ? "Edit Draft".localized : "Edit Essay".localized)))
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundColor(.secondary)
+                                    .tracking(2)
+                                    .textCase(.uppercase)
+
+                                Text(keyword)
+                                    .font(.system(size: 32, weight: .heavy, design: .serif))
+                                    .foregroundColor(Color(hex: "852E47")) // Ruby Leaf
+                                    .tracking(-1)
                             }
-                        )
-                        .frame(maxHeight: .infinity)
-                        // Update font at cursor/selection when font changes
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 24)
+                            .padding(.top, 60)
+
+                            // Title and Content
+                            VStack(spacing: 0) {
+                                // Title field
+                                TextField("Title".localized, text: $title)
+                                    .font(.system(size: 20, weight: .semibold))
+                                    .foregroundStyle(.primary)
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 12)
+
+                                Divider()
+                                    .padding(.horizontal, 20)
+
+                                // Content with rich text editing
+                                RichTextEditor(
+                                    attributedText: $attributedContent,
+                                    font: self.fontManager.currentFont.uiFont(size: self.fontManager.writingFontSize),
+                                    textColor: UIColor.label,
+                                    lineSpacing: self.fontManager.lineSpacing,
+                                    onTextViewCreated: { textView in
+                                        self.textView = textView
+                                    },
+                                    onTextChange: {
+                                        // Real-time word count update
+                                        self.content = self.attributedContent.string
+                                    }
+                                )
+                                .padding(.horizontal, 20)
+                                .padding(.top, 12)
+                                .frame(height: 350)
+                                // Update font at cursor/selection when font changes
                         .onChange(of: fontManager.currentFont) { _, _ in
                             guard let textView = textView else { return }
                             let newFont = fontManager.currentFont.uiFont(size: fontManager.writingFontSize)
                             let selectedRange = textView.selectedRange
-                            
+
                             // Apply to selected text, or current paragraph if no selection
                             let rangeToApply: NSRange
                             if selectedRange.length > 0 {
@@ -164,7 +369,7 @@ struct SimpleWritingEditorView: View {
                                 let currentLocation = selectedRange.location
                                 var paraStart = currentLocation
                                 var paraEnd = currentLocation
-                                
+
                                 // Find paragraph boundaries
                                 while paraStart > 0 {
                                     let idx = text.index(text.startIndex, offsetBy: paraStart - 1)
@@ -178,12 +383,12 @@ struct SimpleWritingEditorView: View {
                                 }
                                 rangeToApply = NSMakeRange(paraStart, paraEnd - paraStart)
                             }
-                            
+
                             if rangeToApply.length > 0 {
                                 textView.textStorage.addAttribute(.font, value: newFont, range: rangeToApply)
                                 attributedContent = textView.attributedText
                             }
-                            
+
                             // Update typing attributes for new text
                             textView.typingAttributes[.font] = newFont
                         }
@@ -191,7 +396,7 @@ struct SimpleWritingEditorView: View {
                             guard let textView = textView else { return }
                             let newFont = fontManager.currentFont.uiFont(size: fontManager.writingFontSize)
                             let selectedRange = textView.selectedRange
-                            
+
                             // Apply to selected text, or current paragraph if no selection
                             let rangeToApply: NSRange
                             if selectedRange.length > 0 {
@@ -202,7 +407,7 @@ struct SimpleWritingEditorView: View {
                                 let currentLocation = selectedRange.location
                                 var paraStart = currentLocation
                                 var paraEnd = currentLocation
-                                
+
                                 while paraStart > 0 {
                                     let idx = text.index(text.startIndex, offsetBy: paraStart - 1)
                                     if text[idx] == "\n" { break }
@@ -215,19 +420,19 @@ struct SimpleWritingEditorView: View {
                                 }
                                 rangeToApply = NSMakeRange(paraStart, paraEnd - paraStart)
                             }
-                            
+
                             if rangeToApply.length > 0 {
                                 textView.textStorage.addAttribute(.font, value: newFont, range: rangeToApply)
                                 attributedContent = textView.attributedText
                             }
-                            
+
                             textView.typingAttributes[.font] = newFont
                         }
                         .onChange(of: fontManager.lineSpacing) { _, _ in
                             guard let textView = textView else { return }
                             let paragraphStyle = NSMutableParagraphStyle()
                             paragraphStyle.lineSpacing = fontManager.lineSpacing
-                            
+
                             let selectedRange = textView.selectedRange
                             let rangeToApply: NSRange
                             if selectedRange.length > 0 {
@@ -238,7 +443,7 @@ struct SimpleWritingEditorView: View {
                                 let currentLocation = selectedRange.location
                                 var paraStart = currentLocation
                                 var paraEnd = currentLocation
-                                
+
                                 while paraStart > 0 {
                                     let idx = text.index(text.startIndex, offsetBy: paraStart - 1)
                                     if text[idx] == "\n" { break }
@@ -251,136 +456,31 @@ struct SimpleWritingEditorView: View {
                                 }
                                 rangeToApply = NSMakeRange(paraStart, paraEnd - paraStart)
                             }
-                            
+
                             if rangeToApply.length > 0 {
                                 textView.textStorage.addAttribute(.paragraphStyle, value: paragraphStyle, range: rangeToApply)
                                 attributedContent = textView.attributedText
                             }
-                            
+
                             textView.typingAttributes[.paragraphStyle] = paragraphStyle
                         }
                     }
                     .padding()
                     .frame(maxHeight: .infinity)
-                    // Swipe down to dismiss keyboard
-                    .gesture(
-                        DragGesture(minimumDistance: 50, coordinateSpace: .local)
-                            .onEnded { value in
-                                if value.translation.height > 100 {
-                                    // Swipe down more than 100 points dismisses keyboard
-                                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                                }
-                            }
-                    )
-                    // Tap anywhere on the text editor to dismiss keyboard
-                    .simultaneousGesture(
-                        TapGesture()
-                            .onEnded { _ in
-                                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                            }
-                    )
-                    
-                    // Bottom toolbar with rich text formatting
-                    RichTextFormatToolbar(
-                        onBold: { applyFormatting(.bold) },
-                        onItalic: { applyFormatting(.italic) },
-                        onUnderline: { applyFormatting(.underline) },
-                        onStrikethrough: { applyFormatting(.strikethrough) }
-                    )
-                    .background(Color(.systemBackground))
+
+                    // Progress bar
+                    progressBar
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 8)
+
+                    // Toolbar moved to RichTextEditor's inputAccessoryView
+                }
                 }
                 .frame(maxHeight: .infinity)
             }
             .navigationTitle("")
-            .onAppear {
-                #if DEBUG
-                print("[DEBUG] SimpleWritingEditorView appeared")
-                #endif
-                // Restore saved font and line spacing when editing existing essay
-                if let essay = existingEssay {
-                    if let fontName = essay.fontName,
-                       let savedFont = AppFont(rawValue: fontName) {
-                        fontManager.currentFont = savedFont
-                    }
-                    if let savedLineSpacing = essay.lineSpacing {
-                        fontManager.lineSpacing = savedLineSpacing
-                    }
-                    if let savedFontSize = essay.fontSize {
-                        fontManager.writingFontSize = CGFloat(savedFontSize)
-                    }
-                }
-            }
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel".localized) {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .topBarTrailing) {
-                    HStack(spacing: 12) {
-                        // Visibility dropdown
-                        Menu {
-                            ForEach(EssayVisibility.allCases, id: \.self) { option in
-                                Button {
-                                    visibility = option
-                                } label: {
-                                    HStack {
-                                        Image(systemName: option.icon)
-                                        Text(option.displayName)
-                                        Spacer()
-                                        if visibility == option {
-                                            Image(systemName: "checkmark")
-                                        }
-                                    }
-                                }
-                            }
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: visibility.icon)
-                                Text(visibility.displayName)
-                                    .font(.subheadline.weight(.medium))
-                                Image(systemName: "chevron.down")
-                                    .font(.caption)
-                            }
-                            .foregroundStyle(themeManager.accent)
-                        }
-                        
-                        // Save draft button
-                        Button {
-                            showingSaveDraftConfirmation = true
-                        } label: {
-                            Image(systemName: "clock.arrow.circlepath")
-                                .font(.system(size: 16, weight: .semibold))
-                        }
-                        
-                        // Publish button
-                        Button {
-                            guard !isPublishing && !hasPublished else { return }
-                            showingPublishConfirmation = true
-                        } label: {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 16, weight: .semibold))
-                        }
-                        .disabled(isPublishing || hasPublished)
-                        
-                        // Format menu
-                        Button {
-                            savedCursorLocation = textView?.selectedRange.location ?? 0
-                            showingFormatMenu = true
-                        } label: {
-                            Image(systemName: "textformat")
-                                .font(.system(size: 16, weight: .semibold))
-                        }
-                    }
-                }
-            }
-            .sheet(isPresented: $showingFormatMenu) {
-                FormatMenuSheet(
-                    fontManager: fontManager,
-                    onInsertFormat: insertAroundSelection,
-                    onApplyAlignment: applyAlignment
-                )
+            .fullScreenCover(isPresented: $showingVisibilitySheet) {
+                visibilityBottomSheet
             }
             .alert("Publish Essay?".localized, isPresented: $showingPublishConfirmation) {
                 Button("Cancel".localized, role: .cancel) { }
@@ -423,11 +523,12 @@ struct SimpleWritingEditorView: View {
             }
         }
     }
-    
+}
+
     private func saveDraft() {
         // Prevent multiple calls
         guard !isPublishing else { return }
-        
+
         isPublishing = true
         Task {
             do {
@@ -435,14 +536,14 @@ struct SimpleWritingEditorView: View {
                 let currentFontName = fontManager.currentFont.rawValue
                 let currentLineSpacing = Double(fontManager.lineSpacing)
                 let currentFontSize = Double(fontManager.writingFontSize)
-                
+
                 // Convert attributed content to data and then to base64 string
                 let attributedData = try? attributedContent.data(from: NSRange(location: 0, length: attributedContent.length), documentAttributes: [.documentType: NSAttributedString.DocumentType.rtfd])
                 let attributedContentBase64 = attributedData?.base64EncodedString()
-                
+
                 // Get plain text for word count
                 content = attributedContent.string
-                
+
                 // Always create a new draft - don't update existing
                 #if DEBUG
                 print("[DEBUG] Creating NEW draft with keyword: \(keyword)")
@@ -459,7 +560,7 @@ struct SimpleWritingEditorView: View {
                 #if DEBUG
                 print("[DEBUG] Created draft with ID: \(savedDraft.id ?? "nil")")
                 #endif
-                
+
                 await MainActor.run {
                     isPublishing = false
                     dismiss()
@@ -472,11 +573,11 @@ struct SimpleWritingEditorView: View {
             }
         }
     }
-    
+
     private func debouncedSaveDraft() {
         // Cancel existing timer
         saveDraftTimer?.invalidate()
-        
+
         // Set new timer - save after 2 seconds of no typing
         saveDraftTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { _ in
             Task {
@@ -486,7 +587,7 @@ struct SimpleWritingEditorView: View {
             }
         }
     }
-    
+
     private func publishEssay() {
         // Prevent multiple calls
         guard !isPublishing && !hasPublished else {
@@ -495,7 +596,7 @@ struct SimpleWritingEditorView: View {
             #endif
             return
         }
-        
+
         // Check if user already has a published essay for this keyword
         if existingEssay == nil, let userId = Auth.auth().currentUser?.uid {
             Task {
@@ -523,31 +624,31 @@ struct SimpleWritingEditorView: View {
             }
             return
         }
-        
+
         proceedWithPublish()
     }
-    
+
     private func proceedWithPublish() {
         let callId = UUID().uuidString.prefix(8)
         #if DEBUG
         print("[DEBUG publishEssay #\(callId)] Starting publish")
         #endif
-        
+
         hasPublished = true
         isPublishing = true
-        
+
         // Capture font settings before entering async context
         let currentFontName = fontManager.currentFont.rawValue
         let currentLineSpacing = Double(fontManager.lineSpacing)
         let currentFontSize = Double(fontManager.writingFontSize)
-        
+
         // Get plain text from attributed string for word count
         content = attributedContent.string
-        
+
         // Convert attributed content to data and then to base64 string
         let attributedData = try? attributedContent.data(from: NSRange(location: 0, length: attributedContent.length), documentAttributes: [.documentType: NSAttributedString.DocumentType.rtfd])
         let attributedContentBase64 = attributedData?.base64EncodedString()
-        
+
         Task {
             do {
                 if let essay = existingEssay {
@@ -580,7 +681,7 @@ struct SimpleWritingEditorView: View {
                     print("[DEBUG #\(callId)] Creating NEW essay (existingEssay is nil)")
                     #endif
                     // Create new essay with font, line spacing, and attributed content
-                    _ = try await FirebaseService.shared.createEssay(
+                    let newEssay = try await FirebaseService.shared.createEssay(
                         keyword: keyword,
                         title: title,
                         content: content,
@@ -590,6 +691,17 @@ struct SimpleWritingEditorView: View {
                         fontSize: currentFontSize,
                         attributedContentData: attributedContentBase64
                     )
+                    #if DEBUG
+                    print("[DEBUG #\(callId)] Created essay with ID: \(newEssay.id ?? "nil")")
+                    #endif
+                    // Post notification with new essay
+                    await MainActor.run {
+                        NotificationCenter.default.post(
+                            name: NSNotification.Name("EssayCreated"),
+                            object: nil,
+                            userInfo: ["essay": newEssay]
+                        )
+                    }
                 }
                 await MainActor.run {
                     isPublishing = false
@@ -608,37 +720,37 @@ struct SimpleWritingEditorView: View {
         // For regular formatting like **bold**, just insert plain text
         // The user will type between the markers
         guard let textView = textView else { return }
-        
+
         let mutableAttrText = NSMutableAttributedString(attributedString: attributedContent)
         let insertString = prefix + suffix
         let attrString = NSAttributedString(string: insertString, attributes: [
             .font: fontManager.currentFont.uiFont(size: fontManager.writingFontSize),
             .foregroundColor: UIColor.label
         ])
-        
+
         mutableAttrText.insert(attrString, at: textView.selectedRange.location)
         attributedContent = mutableAttrText
     }
-    
+
     private func insertDivider(_ dividerText: String) {
         print("Inserting divider: \(dividerText)")
-        
+
         let mutableAttrText = NSMutableAttributedString(attributedString: attributedContent)
-        
+
         // Insert location
         let insertLocation = min(savedCursorLocation, mutableAttrText.length)
-        
+
         // Create paragraph style with full-width line
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
         paragraphStyle.paragraphSpacing = 8
         paragraphStyle.paragraphSpacingBefore = 8
-        
+
         // Create a full-width visual divider
         // Use simple characters that don't have built-in underlines
         var dividerString: String
         var dividerAttrs: [NSAttributedString.Key: Any]
-        
+
         switch dividerText {
         case "---":
             // Simple solid line using bullet points
@@ -675,12 +787,12 @@ struct SimpleWritingEditorView: View {
                 .paragraphStyle: paragraphStyle
             ]
         }
-        
+
         let dividerAttrString = NSAttributedString(string: dividerString, attributes: dividerAttrs)
-        
+
         // Insert the divider
         mutableAttrText.insert(dividerAttrString, at: insertLocation)
-        
+
         // Insert a zero-width space with normal font to reset typing attributes
         let resetAttrString = NSAttributedString(string: "\u{200B}", attributes: [
             .font: fontManager.currentFont.uiFont(size: fontManager.writingFontSize),
@@ -688,29 +800,29 @@ struct SimpleWritingEditorView: View {
         ])
         let afterDividerLocation = insertLocation + dividerString.count
         mutableAttrText.insert(resetAttrString, at: afterDividerLocation)
-        
+
         attributedContent = mutableAttrText
-        
+
         // Update saved location for next insertion
         savedCursorLocation = afterDividerLocation + 1
-        
+
         print("Full-width divider inserted at location: \(insertLocation)")
     }
     // MARK: - Rich Text Formatting
-    
+
     enum TextFormatting {
         case bold
         case italic
         case underline
         case strikethrough
     }
-    
+
     private func applyFormatting(_ formatting: TextFormatting) {
         guard let textView = textView else { return }
-        
+
         let selectedRange = textView.selectedRange
         guard selectedRange.length > 0 else { return } // Need selection
-        
+
         switch formatting {
         case .bold:
             toggleFontTrait(.traitBold, for: textView, range: selectedRange)
@@ -721,68 +833,68 @@ struct SimpleWritingEditorView: View {
         case .strikethrough:
             toggleStrikethrough(for: textView, range: selectedRange)
         }
-        
+
         // Update the attributed text binding
         attributedContent = textView.attributedText
     }
-    
+
     private func toggleFontTrait(_ trait: UIFontDescriptor.SymbolicTraits, for textView: UITextView, range: NSRange) {
         // Get the current font at the start of selection
         let currentAttributes = textView.textStorage.attributes(at: range.location, effectiveRange: nil)
         guard let currentFont = currentAttributes[.font] as? UIFont else { return }
-        
+
         let descriptor = currentFont.fontDescriptor
         let hasTrait = descriptor.symbolicTraits.contains(trait)
-        
+
         var newTraits = descriptor.symbolicTraits
         if hasTrait {
             newTraits.remove(trait)
         } else {
             newTraits.insert(trait)
         }
-        
+
         guard let newDescriptor = descriptor.withSymbolicTraits(newTraits) else { return }
         let newFont = UIFont(descriptor: newDescriptor, size: currentFont.pointSize)
-        
+
         textView.textStorage.addAttribute(.font, value: newFont, range: range)
         // Ensure text uses adaptive color after formatting
         textView.textStorage.addAttribute(.foregroundColor, value: UIColor.label, range: range)
     }
-    
+
     private func toggleUnderline(for textView: UITextView, range: NSRange) {
         let currentAttributes = textView.textStorage.attributes(at: range.location, effectiveRange: nil)
         let currentUnderline = currentAttributes[.underlineStyle] as? Int ?? 0
-        
+
         if currentUnderline == NSUnderlineStyle.single.rawValue {
             textView.textStorage.removeAttribute(.underlineStyle, range: range)
         } else {
             textView.textStorage.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: range)
         }
     }
-    
+
     private func toggleStrikethrough(for textView: UITextView, range: NSRange) {
         let currentAttributes = textView.textStorage.attributes(at: range.location, effectiveRange: nil)
         let hasStrikethrough = currentAttributes[.strikethroughStyle] != nil
-        
+
         if hasStrikethrough {
             textView.textStorage.removeAttribute(.strikethroughStyle, range: range)
         } else {
             textView.textStorage.addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: range)
         }
     }
-    
+
     private func applyAlignment(_ alignment: NSTextAlignment) {
         guard let textView = textView else { return }
-        
+
         let selectedRange = textView.selectedRange
         let rangeToAlign: NSRange
-        
+
         // If no text is selected, align the current paragraph
         if selectedRange.length == 0 {
             // Find the current paragraph range
             let currentLocation = selectedRange.location
             let text = textView.textStorage.string
-            
+
             // Find paragraph start
             var paragraphStart = currentLocation
             while paragraphStart > 0 {
@@ -792,7 +904,7 @@ struct SimpleWritingEditorView: View {
                 }
                 paragraphStart -= 1
             }
-            
+
             // Find paragraph end
             var paragraphEnd = currentLocation
             while paragraphEnd < text.count {
@@ -802,93 +914,92 @@ struct SimpleWritingEditorView: View {
                 }
                 paragraphEnd += 1
             }
-            
+
             rangeToAlign = NSMakeRange(paragraphStart, paragraphEnd - paragraphStart)
         } else {
             // Align the selected range
             rangeToAlign = selectedRange
         }
-        
+
         // Apply paragraph style with alignment
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = alignment
         paragraphStyle.lineSpacing = fontManager.lineSpacing
         paragraphStyle.paragraphSpacing = fontManager.lineSpacing * 0.5
-        
+
         textView.textStorage.addAttribute(.paragraphStyle, value: paragraphStyle, range: rangeToAlign)
-        
+
         // Ensure text color remains adaptive
         textView.textStorage.addAttribute(.foregroundColor, value: UIColor.label, range: rangeToAlign)
-        
+
         // Restore selected range
         textView.selectedRange = selectedRange
-        
+
         // Update the binding
         attributedContent = textView.attributedText
     }
-    
+
     private func updateTextViewFont() {
         guard let textView = textView else { return }
-        
+
         let newFont = fontManager.currentFont.uiFont(size: fontManager.writingFontSize)
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineSpacing = fontManager.lineSpacing
         paragraphStyle.paragraphSpacing = fontManager.lineSpacing * 0.5
-        
+
         // Update typing attributes for new text
         textView.typingAttributes = [
             .font: newFont,
             .paragraphStyle: paragraphStyle,
             .foregroundColor: UIColor.label
         ]
-        
+
         // Update existing text
         let mutableAttrText = NSMutableAttributedString(attributedString: textView.attributedText)
         let fullRange = NSRange(location: 0, length: mutableAttrText.length)
-        
+
         if fullRange.length > 0 {
             mutableAttrText.addAttribute(.font, value: newFont, range: fullRange)
             mutableAttrText.addAttribute(.paragraphStyle, value: paragraphStyle, range: fullRange)
             mutableAttrText.addAttribute(.foregroundColor, value: UIColor.label, range: fullRange)
-            
+
             let selectedRange = textView.selectedRange
             textView.attributedText = mutableAttrText
             textView.selectedRange = selectedRange
-            
+
             attributedContent = mutableAttrText
         }
     }
-}
 
 // MARK: - Paper Background (Adaptive)
 
 struct PaperBackgroundView: View {
     @Environment(\.colorScheme) var colorScheme
-    
+
     var body: some View {
         ZStack {
             // Base color - adaptive
             ThemeColors.paperBackground(for: colorScheme)
                 .ignoresSafeArea()
-            
+
             // Subtle texture using overlay
             GeometryReader { geometry in
                 Canvas { context, size in
                     // Draw subtle lines for paper texture
                     let lineSpacing: CGFloat = 4
                     var y: CGFloat = 0
-                    
+
                     while y < size.height {
                         var path = Path()
                         path.move(to: CGPoint(x: 0, y: y))
                         path.addLine(to: CGPoint(x: size.width, y: y))
-                        
+
                         context.stroke(
                             path,
                             with: .color(ThemeColors.paperLines(for: colorScheme)),
                             lineWidth: 0.5
                         )
-                        
+
                         y += lineSpacing
                     }
                 }
@@ -906,7 +1017,7 @@ struct FormatMenuSheet: View {
     let onInsertFormat: (String, String) -> Void
     let onApplyAlignment: (NSTextAlignment) -> Void
     @Environment(\.dismiss) private var dismiss
-    
+
     var body: some View {
         NavigationStack {
             List {
@@ -919,7 +1030,7 @@ struct FormatMenuSheet: View {
                     }
                     .padding(.vertical, 8)
                 }
-                
+
                 Section("Alignment".localized) {
                     HStack(spacing: 20) {
                         // Left align
@@ -937,7 +1048,7 @@ struct FormatMenuSheet: View {
                             .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.plain)
-                        
+
                         // Center align
                         Button {
                             onApplyAlignment(.center)
@@ -953,7 +1064,7 @@ struct FormatMenuSheet: View {
                             .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.plain)
-                        
+
                         // Right align
                         Button {
                             onApplyAlignment(.right)
@@ -972,7 +1083,7 @@ struct FormatMenuSheet: View {
                     }
                     .padding(.vertical, 8)
                 }
-                
+
                 Section("Font".localized) {
                     Picker("Font".localized, selection: Binding(
                         get: { fontManager.currentFont },
@@ -986,26 +1097,26 @@ struct FormatMenuSheet: View {
                     }
                     .pickerStyle(.wheel)
                     .frame(height: 150)
-                    
+
                     HStack {
                         Text("Size".localized)
                         Spacer()
                         Text("\(Int(fontManager.writingFontSize))pt")
                             .foregroundStyle(.secondary)
                     }
-                    
+
                     Slider(value: Binding(
                         get: { fontManager.writingFontSize },
                         set: { fontManager.setFontSize($0) }
                     ), in: 14...32, step: 1)
-                    
+
                     HStack {
                         Text("Line Spacing".localized)
                         Spacer()
                         Text(String(format: "%dpt", Int(fontManager.lineSpacing)))
                             .foregroundStyle(.secondary)
                     }
-                    
+
                     Slider(value: Binding(
                         get: { fontManager.lineSpacing },
                         set: { fontManager.setLineSpacing($0) }
@@ -1028,7 +1139,7 @@ struct FormatMenuSheet: View {
 struct FormatButton: View {
     let icon: String
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             Image(systemName: icon)
@@ -1055,11 +1166,11 @@ struct BottomFormatToolbar: View {
     let onInsertUnderline: () -> Void
     let onInsertStrikethrough: () -> Void
     @State private var showingFontPicker = false
-    
+
     var body: some View {
         VStack(spacing: 0) {
             Divider()
-            
+
             HStack(spacing: 16) {
                 // Format buttons (Bold, Italic, Underline, Strikethrough)
                 HStack(spacing: 12) {
@@ -1070,7 +1181,7 @@ struct BottomFormatToolbar: View {
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(themeManager.accent)
                     }
-                    
+
                     Button {
                         onInsertItalic()
                     } label: {
@@ -1078,7 +1189,7 @@ struct BottomFormatToolbar: View {
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(themeManager.accent)
                     }
-                    
+
                     Button {
                         onInsertUnderline()
                     } label: {
@@ -1086,7 +1197,7 @@ struct BottomFormatToolbar: View {
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(themeManager.accent)
                     }
-                    
+
                     Button {
                         onInsertStrikethrough()
                     } label: {
@@ -1095,10 +1206,10 @@ struct BottomFormatToolbar: View {
                             .foregroundStyle(themeManager.accent)
                     }
                 }
-                
+
                 Divider()
                     .frame(height: 24)
-                
+
                 // Font size controls (Aa)
                 HStack(spacing: 8) {
                     Button {
@@ -1110,12 +1221,12 @@ struct BottomFormatToolbar: View {
                             .foregroundStyle(themeManager.accent)
                     }
                     .disabled(fontManager.writingFontSize <= 14)
-                    
+
                     Text("\(Int(fontManager.writingFontSize))")
                         .font(.caption.monospacedDigit())
                         .frame(width: 24)
                         .foregroundStyle(themeManager.accent)
-                    
+
                     Button {
                         let newSize = min(32, fontManager.writingFontSize + 2)
                         fontManager.setFontSize(newSize)
@@ -1126,10 +1237,10 @@ struct BottomFormatToolbar: View {
                     }
                     .disabled(fontManager.writingFontSize >= 32)
                 }
-                
+
                 Divider()
                     .frame(height: 24)
-                
+
                 // Line spacing controls
                 HStack(spacing: 8) {
                     Button {
@@ -1141,12 +1252,12 @@ struct BottomFormatToolbar: View {
                             .foregroundStyle(themeManager.accent)
                     }
                     .disabled(fontManager.lineSpacing <= 0)
-                    
+
                     Text("\(Int(fontManager.lineSpacing))")
                         .font(.caption.monospacedDigit())
                         .frame(width: 24)
                         .foregroundStyle(themeManager.accent)
-                    
+
                     Button {
                         let newSpacing = min(20, fontManager.lineSpacing + 2)
                         fontManager.setLineSpacing(newSpacing)
@@ -1157,10 +1268,10 @@ struct BottomFormatToolbar: View {
                     }
                     .disabled(fontManager.lineSpacing >= 20)
                 }
-                
+
                 Divider()
                     .frame(height: 24)
-                
+
                 // Font family picker
                 Button {
                     showingFontPicker = true
@@ -1191,7 +1302,7 @@ struct SimpleFontPickerSheet: View {
     @ObservedObject var fontManager: FontManager
     @StateObject private var themeManager = ThemeManager.shared
     @Environment(\.dismiss) private var dismiss
-    
+
     var body: some View {
         NavigationStack {
             List {
@@ -1203,9 +1314,9 @@ struct SimpleFontPickerSheet: View {
                         HStack {
                             Text(font.displayName)
                                 .font(font.font(size: 17))
-                            
+
                             Spacer()
-                            
+
                             if fontManager.currentFont == font {
                                 Image(systemName: "checkmark")
                                     .foregroundStyle(themeManager.accent)
@@ -1225,4 +1336,5 @@ struct SimpleFontPickerSheet: View {
             }
         }
     }
+}
 }

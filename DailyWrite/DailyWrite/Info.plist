@@ -18,6 +18,13 @@
 	<key>GIDClientID</key>
 	<string>594790430130-90seiqb3gcd4q3kd3usplteuvfektarb.apps.googleusercontent.com</string>
 	
+	<key>FirebaseInAppMessagingAutomaticDataCollectionEnabled</key>
+	<false/>
+	
+	<!-- Disable In-App Messaging -->
+	<key>FirebaseInAppMessaging</key>
+	<false/>
+	
 	<!-- App Tracking Transparency -->
 	<key>NSUserTrackingUsageDescription</key>
 	<string>Your data is used to deliver personalized content and improve app performance.</string>

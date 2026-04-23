@@ -1,6 +1,12 @@
 import Foundation
 import FirebaseFirestore
 
+// Notification names
+extension Notification.Name {
+    static let essayDeleted = Notification.Name("essayDeleted")
+    static let essayCreated = Notification.Name("essayCreated")
+}
+
 enum EssayVisibility: String, Codable, CaseIterable {
     case `private` = "private"
     case friends = "friends"
@@ -208,11 +214,9 @@ extension Essay {
         let content = dictionary["content"] as? String ?? ""
         let wordCount = dictionary["wordCount"] as? Int ?? content.filter { !$0.isWhitespace }.count
         
-        guard let visibilityString = dictionary["visibility"] as? String,
-              let visibility = EssayVisibility(rawValue: visibilityString) else {
-            print("[DEBUG Essay.init] Missing or invalid visibility")
-            return nil
-        }
+        // Visibility - default to .public for older essays without the field
+        let visibilityString = dictionary["visibility"] as? String
+        let visibility = visibilityString.flatMap { EssayVisibility(rawValue: $0) } ?? .public
         
         let isDraft = dictionary["isDraft"] as? Bool ?? false
         
@@ -225,7 +229,7 @@ extension Essay {
         } else if let createdDate = dictionary["createdAt"] as? Date {
             createdAt = createdDate
         } else {
-            print("[DEBUG Essay.init] Missing createdAt")
+            print("[DEBUG Essay.init] Missing createdAt for doc: \(documentId ?? "nil")")
             return nil
         }
         
@@ -234,7 +238,7 @@ extension Essay {
         } else if let updatedDate = dictionary["updatedAt"] as? Date {
             updatedAt = updatedDate
         } else {
-            print("[DEBUG Essay.init] Missing updatedAt")
+            print("[DEBUG Essay.init] Missing updatedAt for doc: \(documentId ?? "nil")")
             return nil
         }
         

@@ -236,3 +236,23 @@
 "Left" = "Left";
 "Center" = "Center";
 "Right" = "Right";
+
+/* Writing Editor */
+"Complete" = "Complete";
+
+/* Notifications */
+"New Comment" = "New Comment";
+"New Reply" = "New Reply";
+"New Follower" = "New Follower";
+"New Friend Request" = "New Friend Request";
+"%@ commented on your essay" = "%@ commented on your essay";
+"%@ replied to your comment" = "%@ replied to your comment";
+"%@ started following you" = "%@ started following you";
+"You have a new friend request!" = "You have a new friend request!";
+"You have %d new friend requests!" = "You have %d new friend requests!";
+
+/* Notification Prompt */
+"Daily Writing Reminder" = "Daily Writing Reminder";
+"Would you like to receive daily reminders to write? You can change this anytime in Settings." = "Would you like to receive daily reminders to write? You can change this anytime in Settings.";
+"Not Now" = "Not Now";
+"Enable" = "Enable";

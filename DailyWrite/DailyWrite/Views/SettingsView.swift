@@ -11,61 +11,13 @@ struct SettingsView: View {
     @State private var showBackupAlert = false
     @State private var showingDeleteAccountConfirmation = false
     @State private var showingSignOutConfirmation = false
-    @State private var showThemePicker = false
-    @State private var showAccentColorPicker = false
     @State private var showRecentlyDeleted = false
     @StateObject private var themeManager = ThemeManager.shared
     
     var body: some View {
         NavigationStack {
             List {
-                // Localization fix
-                Section("Appearance".localized) {
-                    // Theme picker
-                    Button {
-                        showThemePicker = true
-                    } label: {
-                        HStack {
-                            Text("Theme".localized)
-                            Spacer()
-                            HStack(spacing: 4) {
-                                Image(systemName: themeManager.currentTheme.icon)
-                                Text(themeManager.currentTheme.displayName.localized)
-                            }
-                            .foregroundStyle(.secondary)
-                            Image(systemName: "chevron.right")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .foregroundStyle(.primary)
-                    
-                    // Accent color picker
-                    Button {
-                        showAccentColorPicker = true
-                    } label: {
-                        HStack {
-                            Text("Accent Color".localized)
-                            Spacer()
-                            Circle()
-                                .fill(themeManager.accentColor.color)
-                                .frame(width: 24, height: 24)
-                                .overlay(
-                                    Circle()
-                                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                                )
-                            Image(systemName: "chevron.right")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .foregroundStyle(.primary)
-                }
-                
-                Section("Language".localized) {
-                    LanguageSectionContent()
-                }
-                
+                // Notifications Section
                 Section("Notifications".localized) {
                     Button {
                         showNotificationSettings = true
@@ -187,11 +139,6 @@ struct SettingsView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showThemePicker) {
-                NavigationStack {
-                    ThemePickerView()
-                }
-            }
             .sheet(isPresented: $showBackupSheet) {
                 BackupSheet()
             }
@@ -200,11 +147,6 @@ struct SettingsView: View {
             }
             .sheet(isPresented: $showRecentlyDeleted) {
                 RecentlyDeletedView()
-            }
-            .sheet(isPresented: $showAccentColorPicker) {
-                NavigationStack {
-                    AccentColorPickerView()
-                }
             }
             .alert("Backup".localized, isPresented: $showBackupAlert) {
                 Button("OK".localized, role: .cancel) { }
@@ -389,7 +331,8 @@ struct BackupSheet: View {
         guard let userId = Auth.auth().currentUser?.uid else { return }
         do {
             let essays = try await FirebaseService.shared.getUserEssays(userId: userId)
-            essayCount = essays.count
+            // Filter out deleted essays
+            essayCount = essays.filter { $0.deletedAt == nil }.count
         } catch {
             print("Error loading essay count: \(error)")
         }
@@ -461,44 +404,6 @@ struct BackupSheet: View {
     }
 }
 
-// MARK: - Language Row Component
-struct LanguageRow: View {
-    let language: AppLanguage
-    let isSelected: Bool
-    @StateObject private var themeManager = ThemeManager.shared
-    
-    var body: some View {
-        HStack {
-            Text(language.flag)
-            Text(language.displayName)
-            Spacer()
-            if isSelected {
-                Image(systemName: "checkmark")
-                    .foregroundStyle(themeManager.accent)
-            }
-        }
-        .foregroundStyle(.primary)
-    }
-}
-
-// MARK: - Language Section Content
-struct LanguageSectionContent: View {
-    @StateObject private var languageManager = LanguageManager.shared
-    
-    var body: some View {
-        ForEach(AppLanguage.allCases) { language in
-            Button {
-                languageManager.selectLanguage(language)
-            } label: {
-                LanguageRow(
-                    language: language,
-                    isSelected: languageManager.currentLanguage == language
-                )
-            }
-        }
-    }
-}
-
 // Localization strings needed:
 // "Backup & Export" = "Backup & Export"
 // "Backup to iCloud" = "Backup to iCloud"
@@ -513,105 +418,3 @@ struct LanguageSectionContent: View {
 // "Plain Text" = "Plain Text"
 // "Export %@ Essays" = "Export %@ Essays"
 // "Export your essays as a file you can save to Files, iCloud Drive, Google Drive, or share with others." = "Export your essays as a file you can save to Files, iCloud Drive, Google Drive, or share with others."
-
-// MARK: - Accent Color Picker (Moved from separate file)
-struct AccentColorPickerView: View {
-    @StateObject private var themeManager = ThemeManager.shared
-    @Environment(\.dismiss) private var dismiss
-    
-    let columns = [
-        GridItem(.adaptive(minimum: 70), spacing: 16)
-    ]
-    
-    var body: some View {
-        List {
-            Section("Preview".localized) {
-                VStack(spacing: 20) {
-                    // Sample UI showing accent color
-                    HStack(spacing: 12) {
-                        Image(systemName: "heart.fill")
-                            .foregroundStyle(themeManager.accentColor.color)
-                        Text("Sample Button")
-                            .fontWeight(.medium)
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 12)
-                    .background(themeManager.accentColor.color.opacity(0.15))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                    
-                    HStack(spacing: 8) {
-                        Circle()
-                            .fill(themeManager.accentColor.color)
-                            .frame(width: 12, height: 12)
-                        Text("Active Indicator")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 20)
-            }
-            
-            Section("Choose Color".localized) {
-                LazyVGrid(columns: columns, spacing: 20) {
-                    ForEach(AppAccentColor.allCases) { accent in
-                        ColorOption(
-                            color: accent.color,
-                            isSelected: themeManager.accentColor == accent,
-                            displayName: accent.displayName
-                        )
-                        .onTapGesture {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                themeManager.setAccentColor(accent)
-                            }
-                        }
-                    }
-                }
-                .padding(.vertical, 8)
-            }
-        }
-        .navigationTitle("Accent Color".localized)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Done".localized) {
-                    dismiss()
-                }
-            }
-        }
-    }
-}
-
-struct ColorOption: View {
-    let color: Color
-    let isSelected: Bool
-    let displayName: String
-    
-    var body: some View {
-        VStack(spacing: 8) {
-            ZStack {
-                Circle()
-                    .fill(color)
-                    .frame(width: 56, height: 56)
-                
-                if isSelected {
-                    Circle()
-                        .stroke(Color.white, lineWidth: 3)
-                        .frame(width: 56, height: 56)
-                    
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(.white)
-                }
-            }
-            .overlay(
-                Circle()
-                    .stroke(isSelected ? color.opacity(0.5) : Color.gray.opacity(0.3), lineWidth: isSelected ? 3 : 1)
-            )
-            
-            Text(displayName.localized)
-                .font(.caption)
-                .foregroundStyle(isSelected ? .primary : .secondary)
-        }
-    }
-}

@@ -11,49 +11,33 @@ struct DraftsView: View {
     
     var body: some View {
         NavigationStack {
-            Group {
-                if isLoading {
-                    ProgressView()
-                } else if drafts.isEmpty {
-                    ContentUnavailableView(
-                        "No Drafts".localized,
-                        systemImage: "doc.text",
-                        description: Text("Start writing to save drafts".localized)
-                    )
-                } else {
-                    List {
-                        ForEach(drafts) { draft in
-                            Button {
-                                selectedDraft = draft
-                                showingEditor = true
-                            } label: {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    HStack {
-                                        Text(draft.title.isEmpty ? "Untitled" : draft.title)
-                                            .font(.headline)
-                                            .foregroundStyle(.primary)
-                                        Spacer()
-                                        Text(draft.updatedAt, style: .date)
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                    
-                                    Text("Keyword".localized + ": \(draft.keyword)")
-                                        .font(.subheadline)
-                                        .foregroundStyle(.secondary)
-                                    
-                                    Text(draft.content)
-                                        .font(.body)
-                                        .lineLimit(3)
-                                        .foregroundStyle(.secondary)
+            ZStack {
+                Color(hex: "F5F0E8")
+                    .ignoresSafeArea()
+                
+                Group {
+                    if isLoading {
+                        ProgressView()
+                    } else if drafts.isEmpty {
+                        ContentUnavailableView(
+                            "No Drafts".localized,
+                            systemImage: "doc.text",
+                            description: Text("Start writing to save drafts".localized)
+                        )
+                    } else {
+                        ScrollView {
+                            LazyVStack(spacing: 16) {
+                                ForEach(drafts) { draft in
+                                    draftCard(for: draft)
+                                        .onTapGesture {
+                                            selectedDraft = draft
+                                            showingEditor = true
+                                        }
                                 }
+                                .onDelete(perform: deleteDraft)
                             }
-                        }
-                        .onDelete(perform: deleteDraft)
-                    }
-                    .fullScreenCover(item: $selectedDraft) { draft in
-                        NavigationStack {
-                            SimpleWritingEditorView(keyword: draft.keyword, existingEssay: draft, isDraft: true)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 16)
                         }
                     }
                 }
@@ -67,7 +51,12 @@ struct DraftsView: View {
                     }
                 }
             }
-            .id(UUID()) // Force refresh when view appears
+            .fullScreenCover(item: $selectedDraft) { draft in
+                NavigationStack {
+                    SimpleWritingEditorView(keyword: draft.keyword, existingEssay: draft, isDraft: true)
+                }
+            }
+            .id(UUID())
             .task {
                 await loadDrafts()
             }
@@ -91,13 +80,9 @@ struct DraftsView: View {
         do {
             drafts = try await FirebaseService.shared.getUserDrafts(userId: userId)
             print("Loaded \(drafts.count) drafts")
-            // Check for nil IDs
             let nilIds = drafts.filter { $0.id == nil }.count
             if nilIds > 0 {
                 print("[WARNING] \(nilIds) drafts have nil ID!")
-            }
-            for (index, draft) in drafts.enumerated() {
-                print("[DEBUG] Draft \(index): id=\(draft.id ?? "nil"), title=\(draft.title), keyword=\(draft.keyword), content=\(draft.content.prefix(30))...")
             }
             isLoading = false
         } catch {
@@ -110,23 +95,76 @@ struct DraftsView: View {
     private func deleteDraft(at offsets: IndexSet) {
         Task {
             do {
-                // Get the drafts to delete
                 let draftsToDelete = offsets.map { drafts[$0] }
                 
-                // Delete from Firebase
                 for draft in draftsToDelete {
                     if let essayId = draft.id {
                         try await FirebaseService.shared.deleteEssay(essayId: essayId)
                     }
                 }
                 
-                // Remove from local array
                 drafts.remove(atOffsets: offsets)
-                
             } catch {
                 print("Error deleting draft: \(error)")
                 errorMessage = error.localizedDescription
             }
         }
+    }
+    
+    // MARK: - Card View
+    private func draftCard(for draft: Essay) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Top label bar
+            HStack {
+                Text(draft.updatedAt, style: .date)
+                    .font(.system(size: 10, weight: .medium))
+                    .tracking(1)
+                    .foregroundColor(Color(hex: "4A5A30"))
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(Color(hex: "E8E0D0"))
+            
+            // Content
+            VStack(alignment: .leading, spacing: 8) {
+                Text(draft.keyword.uppercased())
+                    .font(.system(size: 12, weight: .semibold))
+                    .tracking(1.5)
+                    .foregroundColor(Color(hex: "4A5A30"))
+                
+                Text(draft.title.isEmpty ? "Untitled" : draft.title)
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
+                
+                Text(draft.content)
+                    .font(.system(size: 14))
+                    .foregroundColor(.secondary)
+                    .lineLimit(3)
+                    .multilineTextAlignment(.leading)
+            }
+            .padding(16)
+            
+            // Bottom divider with status
+            HStack {
+                Text("Draft".localized.uppercased())
+                    .font(.system(size: 10, weight: .medium))
+                    .tracking(1)
+                    .foregroundColor(Color(hex: "C2441C"))
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(Color(hex: "4A5A30"))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(Color(hex: "F0EBE3"))
+        }
+        .background(Color.white)
+        .overlay(
+            Rectangle()
+                .stroke(Color(hex: "D4CFC3"), lineWidth: 1)
+        )
     }
 }

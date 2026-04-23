@@ -36,14 +36,18 @@ struct FriendsView: View {
     
     var body: some View {
         NavigationStack {
-            List {
+            ZStack {
+                Color(hex: "F5F0E8")
+                    .ignoresSafeArea()
+                
+                List {
                 // Search bar
                 if !friends.isEmpty {
                     Section {
                         TextField("Search friends...".localized, text: $searchText)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                     }
-                    .listRowBackground(Color.clear)
+                    .listRowBackground(Color(hex: "FDFBF7"))
                 }
                 
                 // Pending requests section
@@ -61,6 +65,7 @@ struct FriendsView: View {
                             }
                         }
                     }
+                    .listRowBackground(Color(hex: "FDFBF7"))
                 }
                 
                 // Friends list
@@ -86,7 +91,8 @@ struct FriendsView: View {
                         }
                         .onDelete(perform: deleteFriend)
                     }
-                } header: {
+                }
+                header: {
                     HStack {
                         Text("My Friends".localized)
                         Spacer()
@@ -108,6 +114,10 @@ struct FriendsView: View {
                         Text("\(friends.count) friends".localized)
                     }
                 }
+                .listRowBackground(Color(hex: "FDFBF7"))
+            }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
             }
             .navigationTitle("Friends".localized)
             .navigationBarTitleDisplayMode(.inline)
@@ -363,7 +373,11 @@ struct AddFriendSheet: View {
     
     var body: some View {
         NavigationStack {
-            List {
+            ZStack {
+                Color(hex: "F5F0E8")
+                    .ignoresSafeArea()
+                
+                List {
                 Section {
                     HStack {
                         TextField("Enter username".localized, text: $searchUsername)
@@ -448,6 +462,8 @@ struct AddFriendSheet: View {
                     }
                 }
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
             .navigationTitle("Add Friend".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -456,6 +472,7 @@ struct AddFriendSheet: View {
                         dismiss()
                     }
                 }
+            }
             }
         }
     }

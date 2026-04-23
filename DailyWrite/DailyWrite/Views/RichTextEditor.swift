@@ -8,28 +8,25 @@ struct RichTextEditor: UIViewRepresentable {
     var textColor: UIColor
     var lineSpacing: CGFloat = 4
     var onTextViewCreated: ((UITextView) -> Void)?
-    var onTextChange: (() -> Void)?  // Real-time callback for word count
+    var onTextChange: (() -> Void)?
+    var toolbarHostingController: UIHostingController<RichTextFormatToolbar>?
     
     func makeUIView(context: Context) -> UITextView {
         let textView = UITextView()
         textView.delegate = context.coordinator
         textView.backgroundColor = .clear
         
-        // Enable rich text editing
         textView.isSelectable = true
         textView.isEditable = true
         textView.allowsEditingTextAttributes = true
         
-        // Configure text container
         textView.textContainerInset = UIEdgeInsets(top: 8, left: 0, bottom: 8, right: 0)
         textView.isScrollEnabled = true
+        textView.keyboardDismissMode = .interactive // Enable dismissible keyboard
         
-        // Set initial text without heavy formatting (fast path)
-        // Formatting will be applied asynchronously
         textView.attributedText = attributedText
         textView.textColor = textColor
         
-        // Apply typing attributes for new text
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineSpacing = lineSpacing
         paragraphStyle.paragraphSpacing = lineSpacing * 0.5
@@ -39,23 +36,20 @@ struct RichTextEditor: UIViewRepresentable {
             .foregroundColor: textColor
         ]
         
-        // Defer heavy font formatting to background thread
+        setupToolbar(for: textView, context: context)
+        
         DispatchQueue.global(qos: .userInitiated).async {
             let mutableAttrText = NSMutableAttributedString(attributedString: self.attributedText)
             let fullRange = NSRange(location: 0, length: mutableAttrText.length)
             
             if fullRange.length > 0 {
-                // Apply font to entire text
                 mutableAttrText.addAttribute(.font, value: self.font, range: fullRange)
                 
-                // Update paragraph style while preserving alignment
                 mutableAttrText.enumerateAttribute(.paragraphStyle, in: fullRange, options: []) { value, range, _ in
                     let newParagraphStyle = NSMutableParagraphStyle()
                     if let existingStyle = value as? NSParagraphStyle {
-                        // Copy all properties including alignment from existing
                         newParagraphStyle.setParagraphStyle(existingStyle)
                     }
-                    // Update only line spacing
                     newParagraphStyle.lineSpacing = self.lineSpacing
                     newParagraphStyle.paragraphSpacing = self.lineSpacing * 0.5
                     mutableAttrText.addAttribute(.paragraphStyle, value: newParagraphStyle, range: range)
@@ -63,7 +57,6 @@ struct RichTextEditor: UIViewRepresentable {
                 
                 mutableAttrText.addAttribute(.foregroundColor, value: self.textColor, range: fullRange)
                 
-                // Update on main thread
                 DispatchQueue.main.async {
                     let selectedRange = textView.selectedRange
                     textView.attributedText = mutableAttrText
@@ -72,7 +65,6 @@ struct RichTextEditor: UIViewRepresentable {
             }
         }
         
-        // Notify parent about the text view
         DispatchQueue.main.async {
             onTextViewCreated?(textView)
         }
@@ -80,18 +72,36 @@ struct RichTextEditor: UIViewRepresentable {
         return textView
     }
     
+    private func setupToolbar(for textView: UITextView, context: Context) {
+        let toolbar = RichTextFormatToolbar(
+            onBold: { context.coordinator.applyBold(to: textView) },
+            onItalic: { context.coordinator.applyItalic(to: textView) },
+            onUnderline: { context.coordinator.applyUnderline(to: textView) },
+            onStrikethrough: { context.coordinator.applyStrikethrough(to: textView) },
+            onAlignLeft: { context.coordinator.applyAlignment(.left, to: textView) },
+            onAlignCenter: { context.coordinator.applyAlignment(.center, to: textView) },
+            onAlignRight: { context.coordinator.applyAlignment(.right, to: textView) }
+        )
+        
+        let hostingController = UIHostingController(rootView: toolbar)
+        hostingController.view.backgroundColor = .clear
+        
+        let size = hostingController.view.sizeThatFits(CGSize(width: UIScreen.main.bounds.width, height: 100))
+        hostingController.view.frame = CGRect(x: 0, y: 0, width: size.width, height: 50)
+        
+        textView.inputAccessoryView = hostingController.view
+        context.coordinator.toolbarHostingController = hostingController
+    }
+    
     func updateUIView(_ uiView: UITextView, context: Context) {
-        // Check if font or line spacing changed by comparing with coordinator's stored values
         let coordinator = context.coordinator
         let fontChanged = coordinator.currentFont?.fontName != font.fontName || coordinator.currentFont?.pointSize != font.pointSize
         let lineSpacingChanged = abs(coordinator.currentLineSpacing - lineSpacing) > 0.1
         
-        // Update paragraph style
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineSpacing = lineSpacing
         paragraphStyle.paragraphSpacing = lineSpacing * 0.5
         
-        // Get current paragraph alignment to preserve it for new text
         let currentAlignment: NSTextAlignment
         let cursorLocation = uiView.selectedRange.location
         if cursorLocation < uiView.attributedText.length {
@@ -100,83 +110,58 @@ struct RichTextEditor: UIViewRepresentable {
             } else {
                 currentAlignment = .left
             }
+        } else if uiView.attributedText.length > 0 {
+            if let style = uiView.attributedText.attribute(.paragraphStyle, at: uiView.attributedText.length - 1, effectiveRange: nil) as? NSParagraphStyle {
+                currentAlignment = style.alignment
+            } else {
+                currentAlignment = .left
+            }
         } else {
             currentAlignment = .left
         }
-        
-        // Update paragraph style with current alignment
         paragraphStyle.alignment = currentAlignment
         
-        // Always update typing attributes for new text
+        coordinator.isUpdating = true
+        coordinator.currentFont = font
+        coordinator.currentLineSpacing = lineSpacing
+        
         uiView.typingAttributes = [
             .font: font,
             .paragraphStyle: paragraphStyle,
             .foregroundColor: textColor
         ]
-        uiView.textColor = textColor
         
-        // Only update text content if it changed from external source (not from user typing)
-        // Compare hash of text content to avoid expensive updates on every keystroke
-        let textChanged = uiView.attributedText.string != attributedText.string
+        if fontChanged || lineSpacingChanged {
+            let attributedString = NSMutableAttributedString(attributedString: uiView.attributedText)
+            let fullRange = NSRange(location: 0, length: attributedString.length)
+            
+            if fullRange.length > 0 {
+                attributedString.enumerateAttribute(.paragraphStyle, in: fullRange, options: []) { value, range, _ in
+                    let newParagraphStyle = NSMutableParagraphStyle()
+                    if let existingStyle = value as? NSParagraphStyle {
+                        newParagraphStyle.setParagraphStyle(existingStyle)
+                    }
+                    newParagraphStyle.lineSpacing = lineSpacing
+                    newParagraphStyle.paragraphSpacing = lineSpacing * 0.5
+                    attributedString.addAttribute(.paragraphStyle, value: newParagraphStyle, range: range)
+                }
+                
+                attributedString.addAttribute(.font, value: font, range: fullRange)
+                attributedString.addAttribute(.foregroundColor, value: textColor, range: fullRange)
+                
+                let selectedRange = uiView.selectedRange
+                uiView.attributedText = attributedString
+                uiView.selectedRange = selectedRange
+            }
+        }
         
-        if textChanged && !coordinator.isUpdating {
+        if uiView.attributedText != attributedText && !attributedText.string.isEmpty {
             let selectedRange = uiView.selectedRange
             uiView.attributedText = attributedText
             uiView.selectedRange = selectedRange
         }
         
-        // If font or line spacing changed, update the entire text
-        if fontChanged || lineSpacingChanged {
-            // Create updated attributed text with new font and line spacing
-            let mutableAttrText = NSMutableAttributedString(attributedString: uiView.attributedText)
-            let fullRange = NSRange(location: 0, length: mutableAttrText.length)
-            
-            if fullRange.length > 0 {
-                // Update font for the entire text
-                mutableAttrText.addAttribute(.font, value: font, range: fullRange)
-                
-                // Update paragraph style while preserving alignment
-                // Enumerate existing paragraph styles and update only line spacing
-                mutableAttrText.enumerateAttribute(.paragraphStyle, in: fullRange, options: []) { value, range, _ in
-                    let newParagraphStyle = NSMutableParagraphStyle()
-                    if let existingStyle = value as? NSParagraphStyle {
-                        // Copy all properties including alignment
-                        newParagraphStyle.setParagraphStyle(existingStyle)
-                    }
-                    // Update only line spacing
-                    newParagraphStyle.lineSpacing = lineSpacing
-                    newParagraphStyle.paragraphSpacing = lineSpacing * 0.5
-                    mutableAttrText.addAttribute(.paragraphStyle, value: newParagraphStyle, range: range)
-                }
-                
-                // Update foreground color
-                mutableAttrText.addAttribute(.foregroundColor, value: textColor, range: fullRange)
-                
-                // Preserve selected range
-                let selectedRange = uiView.selectedRange
-                uiView.attributedText = mutableAttrText
-                uiView.selectedRange = selectedRange
-                
-                // Update the parent's attributedText to match without triggering another update
-                DispatchQueue.main.async {
-                    coordinator.isUpdating = true
-                    self.attributedText = mutableAttrText
-                    coordinator.isUpdating = false
-                }
-            }
-            
-            // Update coordinator's stored values
-            coordinator.currentFont = font
-            coordinator.currentLineSpacing = lineSpacing
-        } else if !uiView.attributedText.isEqual(to: attributedText) {
-            // Only update if the text is different (from external changes)
-            // and we're not currently in the middle of an update
-            if !context.coordinator.isUpdating {
-                let selectedRange = uiView.selectedRange
-                uiView.attributedText = attributedText
-                uiView.selectedRange = selectedRange
-            }
-        }
+        coordinator.isUpdating = false
     }
     
     func makeCoordinator() -> Coordinator {
@@ -188,6 +173,7 @@ struct RichTextEditor: UIViewRepresentable {
         var isUpdating = false
         var currentFont: UIFont?
         var currentLineSpacing: CGFloat = 4
+        var toolbarHostingController: UIHostingController<RichTextFormatToolbar>?
         
         init(_ parent: RichTextEditor) {
             self.parent = parent
@@ -198,8 +184,91 @@ struct RichTextEditor: UIViewRepresentable {
         func textViewDidChange(_ textView: UITextView) {
             if !isUpdating {
                 parent.attributedText = textView.attributedText
-                // Call real-time callback for word count update
                 parent.onTextChange?()
+            }
+        }
+        
+        // MARK: - UIScrollViewDelegate
+        
+        func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+            if let textView = scrollView as? UITextView, textView.isFirstResponder {
+                textView.resignFirstResponder()
+            }
+        }
+        
+        // MARK: - Formatting Actions
+        
+        func applyBold(to textView: UITextView) {
+            toggleAttribute(.traitBold, for: textView)
+        }
+        
+        func applyItalic(to textView: UITextView) {
+            toggleAttribute(.traitItalic, for: textView)
+        }
+        
+        func applyUnderline(to textView: UITextView) {
+            let range = textView.selectedRange
+            if range.length > 0 {
+                let attributedText = NSMutableAttributedString(attributedString: textView.attributedText)
+                let currentUnderline = attributedText.attribute(.underlineStyle, at: range.location, effectiveRange: nil) as? NSNumber
+                let newUnderline: NSNumber = (currentUnderline != nil) ? 0 : 1
+                attributedText.addAttribute(.underlineStyle, value: newUnderline, range: range)
+                textView.attributedText = attributedText
+                textView.selectedRange = range
+                parent.attributedText = attributedText
+            }
+        }
+        
+        func applyStrikethrough(to textView: UITextView) {
+            let range = textView.selectedRange
+            if range.length > 0 {
+                let attributedText = NSMutableAttributedString(attributedString: textView.attributedText)
+                let currentStrikethrough = attributedText.attribute(.strikethroughStyle, at: range.location, effectiveRange: nil) as? NSNumber
+                let newStrikethrough: NSNumber = (currentStrikethrough != nil) ? 0 : 1
+                attributedText.addAttribute(.strikethroughStyle, value: newStrikethrough, range: range)
+                textView.attributedText = attributedText
+                textView.selectedRange = range
+                parent.attributedText = attributedText
+            }
+        }
+        
+        func applyAlignment(_ alignment: NSTextAlignment, to textView: UITextView) {
+            let range = textView.selectedRange
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.alignment = alignment
+            paragraphStyle.lineSpacing = currentLineSpacing
+            
+            if range.length > 0 {
+                let attributedText = NSMutableAttributedString(attributedString: textView.attributedText)
+                attributedText.addAttribute(.paragraphStyle, value: paragraphStyle, range: range)
+                textView.attributedText = attributedText
+                parent.attributedText = attributedText
+            }
+            
+            textView.typingAttributes[.paragraphStyle] = paragraphStyle
+            textView.selectedRange = range
+        }
+        
+        private func toggleAttribute(_ trait: UIFontDescriptor.SymbolicTraits, for textView: UITextView) {
+            let range = textView.selectedRange
+            guard range.length > 0 else { return }
+            
+            let attributedText = NSMutableAttributedString(attributedString: textView.attributedText)
+            let currentFont = attributedText.attribute(.font, at: range.location, effectiveRange: nil) as? UIFont ?? parent.font
+            
+            var newTraits = currentFont.fontDescriptor.symbolicTraits
+            if newTraits.contains(trait) {
+                newTraits.remove(trait)
+            } else {
+                newTraits.insert(trait)
+            }
+            
+            if let newDescriptor = currentFont.fontDescriptor.withSymbolicTraits(newTraits) {
+                let newFont = UIFont(descriptor: newDescriptor, size: currentFont.pointSize)
+                attributedText.addAttribute(.font, value: newFont, range: range)
+                textView.attributedText = attributedText
+                textView.selectedRange = range
+                parent.attributedText = attributedText
             }
         }
     }
@@ -212,49 +281,114 @@ struct RichTextFormatToolbar: View {
     let onItalic: () -> Void
     let onUnderline: () -> Void
     let onStrikethrough: () -> Void
-    @StateObject private var themeManager = ThemeManager.shared
+    let onAlignLeft: () -> Void
+    let onAlignCenter: () -> Void
+    let onAlignRight: () -> Void
+    
+    @StateObject private var fontManager = FontManager.shared
     
     var body: some View {
-        VStack(spacing: 0) {
-            Divider()
-            
-            HStack(spacing: 20) {
-                // Format buttons with theme color icons
-                Button(action: onBold) {
-                    Image(systemName: "bold")
-                        .font(.system(size: 18, weight: .semibold))
-                        .frame(width: 44, height: 44)
-                        .foregroundStyle(themeManager.accent)
+        HStack(spacing: 16) {
+            // Font dropdown
+            Menu {
+                ForEach(AppFont.allCases) { font in
+                    Button(action: {
+                        fontManager.currentFont = font
+                    }) {
+                        HStack {
+                            Text(font.displayName)
+                                .font(font == .system ? .system(size: 14) : Font.custom(font.uiFont(size: 14).fontName, size: 14))
+                            Spacer()
+                            if fontManager.currentFont == font {
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 12, weight: .bold))
+                            }
+                        }
+                    }
                 }
-                .buttonStyle(PlainButtonStyle())
-                
-                Button(action: onItalic) {
-                    Image(systemName: "italic")
-                        .font(.system(size: 18, weight: .semibold))
-                        .frame(width: 44, height: 44)
-                        .foregroundStyle(themeManager.accent)
-                }
-                .buttonStyle(PlainButtonStyle())
-                
-                Button(action: onUnderline) {
-                    Image(systemName: "underline")
-                        .font(.system(size: 18, weight: .semibold))
-                        .frame(width: 44, height: 44)
-                        .foregroundStyle(themeManager.accent)
-                }
-                .buttonStyle(PlainButtonStyle())
-                
-                Button(action: onStrikethrough) {
-                    Image(systemName: "strikethrough")
-                        .font(.system(size: 18, weight: .semibold))
-                        .frame(width: 44, height: 44)
-                        .foregroundStyle(themeManager.accent)
-                }
-                .buttonStyle(PlainButtonStyle())
+            } label: {
+                Text(fontManager.currentFont.displayName)
+                    .font(.system(size: 15))
+                    .foregroundColor(Color(hex: "0D244D"))
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: 50)
-            .background(.ultraThinMaterial)
+            
+            Divider()
+                .frame(height: 24)
+            
+            // Size dropdown
+            Menu {
+                let sizes: [CGFloat] = [11, 12, 13, 14, 15, 16, 17, 18, 20, 22, 24]
+                ForEach(sizes, id: \.self) { size in
+                    Button(action: {
+                        fontManager.writingFontSize = size
+                    }) {
+                        HStack {
+                            Text("\(Int(size))pt")
+                                .font(.system(size: 14))
+                            Spacer()
+                            if fontManager.writingFontSize == size {
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 12, weight: .bold))
+                            }
+                        }
+                    }
+                }
+            } label: {
+                Text("\(Int(fontManager.writingFontSize))pt")
+                    .font(.system(size: 15))
+                    .foregroundColor(Color(hex: "0D244D"))
+            }
+            
+            Divider()
+                .frame(height: 24)
+            
+            // Formatting buttons
+            Button(action: onBold) {
+                Text("B")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(Color(hex: "0D244D"))
+            }
+            
+            Button(action: onItalic) {
+                Text("I")
+                    .font(.system(size: 18, weight: .regular, design: .serif))
+                    .italic()
+                    .foregroundColor(Color(hex: "0D244D"))
+            }
+            
+            Button(action: onUnderline) {
+                Text("U")
+                    .font(.system(size: 18))
+                    .underline()
+                    .foregroundColor(Color(hex: "0D244D"))
+            }
+            
+            Divider()
+                .frame(height: 24)
+            
+            // Alignment buttons
+            HStack(spacing: 12) {
+                Button(action: onAlignLeft) {
+                    Image(systemName: "text.alignleft")
+                        .font(.system(size: 18))
+                        .foregroundColor(Color(hex: "0D244D"))
+                }
+                
+                Button(action: onAlignCenter) {
+                    Image(systemName: "text.aligncenter")
+                        .font(.system(size: 18))
+                        .foregroundColor(Color(hex: "0D244D"))
+                }
+                
+                Button(action: onAlignRight) {
+                    Image(systemName: "text.alignright")
+                        .font(.system(size: 18))
+                        .foregroundColor(Color(hex: "0D244D"))
+                }
+            }
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(Color(hex: "f2f2f2"))
     }
 }
