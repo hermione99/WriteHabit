@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<title>WriteHabit — Design Exploration</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+  html, body { margin: 0; padding: 0; background: #e9e5da; font-family: 'Pretendard Variable', system-ui, sans-serif; }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="components.jsx"></script>
+<script type="text/babel" src="screens/FeedScreen.jsx"></script>
+<script type="text/babel" src="screens/WriteScreen.jsx"></script>
+<script type="text/babel" src="screens/DetailScreen.jsx"></script>
+<script type="text/babel" src="screens/ProfileScreen.jsx"></script>
+<script type="text/babel" src="screens/ArchiveScreen.jsx"></script>
+<script type="text/babel" src="screens/LoginScreen.jsx"></script>
+<script type="text/babel" src="screens/MobileScreens.jsx"></script>
+<script type="text/babel" src="screens/AdminKeywordsScreen.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+// ── TWEAKS: defaults (host can rewrite this JSON block) ──
+const TWEAKS = /*EDITMODE-BEGIN*/{
+  "theme": "paper",
+  "accent": "terracotta",
+  "korSerif": "gowun"
+}/*EDITMODE-END*/;
+
+const ACCENTS = {
+  terracotta: { c: '#d94615', d: '#b93a10' },
+  mustard:    { c: '#c58b14', d: '#a7760f' },
+  ink:        { c: '#1b1a15', d: '#1b1a15' },
+  moss:       { c: '#5b6b3a', d: '#485629' },
+};
+const KOR_SERIFS = {
+  gowun:  "'Gowun Batang', 'Noto Serif KR', ui-serif, serif",
+  noto:   "'Noto Serif KR', ui-serif, serif",
+  nanum:  "'Nanum Myeongjo', ui-serif, serif",
+};
+
+function applyTweaks(t) {
+  const r = document.documentElement;
+  const a = ACCENTS[t.accent] || ACCENTS.terracotta;
+  r.style.setProperty('--accent', a.c);
+  r.style.setProperty('--accent-deep', a.d);
+  document.querySelectorAll('.wh').forEach(el => {
+    el.classList.toggle('dark', t.theme === 'dark');
+  });
+  const f = KOR_SERIFS[t.korSerif] || KOR_SERIFS.gowun;
+  r.style.setProperty('--f-kr-serif', f);
+}
+
+// Load additional Korean serif fonts
+(function() {
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = 'https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&family=Nanum+Myeongjo:wght@400;700&display=swap';
+  document.head.appendChild(link);
+})();
+
+// ── Tweaks panel ──
+function TweaksPanel({ tweaks, onChange, onClose }) {
+  const update = (k, v) => onChange({ ...tweaks, [k]: v });
+  const Row = ({ label, children }) => (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ fontFamily: 'var(--f-latin)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.16em', color: '#6a6558', marginBottom: 8 }}>{label}</div>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{children}</div>
+    </div>
+  );
+  const Chip = ({ on, onClick, style, children }) => (
+    <button onClick={onClick} style={{
+      padding: '6px 12px',
+      border: on ? '1px solid #1b1a15' : '1px solid rgba(27,26,21,0.14)',
+      background: on ? '#fbf9f3' : 'transparent',
+      color: on ? '#1b1a15' : '#6a6558',
+      fontFamily: 'Pretendard Variable, sans-serif',
+      fontSize: 11.5, cursor: 'pointer', borderRadius: 999,
+      ...style
+    }}>{children}</button>
+  );
+  return (
+    <div style={{
+      position: 'fixed', right: 20, bottom: 20, zIndex: 99999,
+      width: 300, padding: 22,
+      background: '#fbf9f3', border: '1px solid #1b1a15', borderRadius: 4,
+      boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
+      fontFamily: "'Pretendard Variable', sans-serif",
+      color: '#1b1a15',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
+        <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 18, letterSpacing: '-0.02em' }}>Tweaks</div>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 14, cursor: 'pointer', color: '#6a6558' }}>✕</button>
+      </div>
+      <Row label="테마 · THEME">
+        {['paper', 'dark'].map(k => (
+          <Chip key={k} on={tweaks.theme === k} onClick={() => update('theme', k)}>{k === 'paper' ? '종이' : '다크'}</Chip>
+        ))}
+      </Row>
+      <Row label="액센트 · ACCENT">
+        {[['terracotta', '테라코타', '#d94615'], ['mustard', '머스터드', '#c58b14'], ['ink', '먹색', '#1b1a15'], ['moss', '모스', '#5b6b3a']].map(([k, l, c]) => (
+          <Chip key={k} on={tweaks.accent === k} onClick={() => update('accent', k)}>
+            <span style={{ display: 'inline-block', width: 8, height: 8, background: c, marginRight: 6, borderRadius: 2, verticalAlign: -1 }}></span>{l}
+          </Chip>
+        ))}
+      </Row>
+      <Row label="한글 세리프 · KR SERIF">
+        {[['gowun', 'Gowun Batang'], ['noto', 'Noto Serif'], ['nanum', 'Nanum Myeongjo']].map(([k, l]) => (
+          <Chip key={k} on={tweaks.korSerif === k} onClick={() => update('korSerif', k)}>{l}</Chip>
+        ))}
+      </Row>
+      <div style={{ fontSize: 11, color: '#6a6558', marginTop: 8, lineHeight: 1.6 }}>
+        한글 서체 전부 상업적 이용 가능 · Pretendard(본문) + Gowun/Noto/Nanum(제목)
+      </div>
+    </div>
+  );
+}
+
+// ── Backend readme artboard ──
+function BackendReadme() {
+  const fileStyle = { fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#2e2c25', lineHeight: 1.7 };
+  return (
+    <div className="wh" style={{ padding: '40px 48px', overflow: 'auto' }}>
+      <div className="eyebrow" style={{ marginBottom: 10 }}>BACKEND · PYTHON / FASTAPI</div>
+      <h1 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 44, letterSpacing: '-0.03em', margin: '0 0 8px', color: '#1b1a15' }}>
+        서버 스펙 & API
+      </h1>
+      <p style={{ color: '#6a6558', fontSize: 14, maxWidth: 62, margin: 0 }}>
+        프론트엔드가 의존하는 핵심 엔드포인트. Python 3.11 · FastAPI · SQLAlchemy · PostgreSQL · Redis(스트릭 캐시)
+      </p>
+
+      <div style={{ marginTop: 28, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 36 }}>
+        <div>
+          <div className="col-h"><h2>리소스 모델</h2></div>
+          <div style={fileStyle}>
+            <div><span style={{color:'#d94615'}}>User</span> (id, handle, name, bio, created_at)</div>
+            <div><span style={{color:'#d94615'}}>Keyword</span> (id, date, word_ko, word_en, prompt)</div>
+            <div><span style={{color:'#d94615'}}>Post</span> (id, keyword_id, user_id, title, body, created_at)</div>
+            <div><span style={{color:'#d94615'}}>Reaction</span> (post_id, user_id, emoji)</div>
+            <div><span style={{color:'#d94615'}}>Comment</span> (id, post_id, user_id, body, parent_id)</div>
+            <div><span style={{color:'#d94615'}}>Bookmark</span> (user_id, post_id)</div>
+            <div><span style={{color:'#d94615'}}>Follow</span> (follower_id, followee_id)</div>
+            <div><span style={{color:'#d94615'}}>Streak</span> (user_id, current, longest, last_at)</div>
+          </div>
+        </div>
+
+        <div>
+          <div className="col-h"><h2>주요 엔드포인트</h2></div>
+          {[
+            ['GET',    '/api/keywords/today',       '오늘의 키워드 + 메타'],
+            ['GET',    '/api/keywords/:id/posts',   '키워드별 글 피드(cursor)'],
+            ['POST',   '/api/posts',                '새 글 작성 · 스트릭 갱신'],
+            ['POST',   '/api/posts/:id/reactions',  '이모지 반응 토글'],
+            ['POST',   '/api/posts/:id/comments',   '댓글 작성'],
+            ['POST',   '/api/posts/:id/bookmark',   '북마크 토글'],
+            ['POST',   '/api/users/:id/follow',     '팔로우 토글'],
+            ['GET',    '/api/me/streak',            '현재 스트릭(Redis)'],
+            ['GET',    '/api/archive',              '지난 키워드 목록'],
+          ].map(([m, p, d], i) => (
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: '56px 1fr auto', gap: 12, padding: '10px 0', borderBottom: '1px solid rgba(27,26,21,0.06)', alignItems: 'baseline' }}>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 600, color: m === 'POST' ? '#d94615' : '#1b1a15' }}>{m}</span>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#1b1a15' }}>{p}</span>
+              <span style={{ fontFamily: "'Pretendard Variable'", fontSize: 12, color: '#6a6558' }}>{d}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ marginTop: 32 }}>
+        <div className="col-h"><h2>스택 · STACK</h2></div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24 }}>
+          {[
+            ['FRONTEND', 'HTML · CSS · JS\nVanilla + Progressive'],
+            ['BACKEND', 'Python 3.11\nFastAPI · Uvicorn'],
+            ['DB', 'PostgreSQL 16\nSQLAlchemy · Alembic'],
+            ['CACHE', 'Redis 7\n스트릭 / 세션'],
+          ].map(([k, v]) => (
+            <div key={k} style={{ padding: '14px 16px', border: '1px solid rgba(27,26,21,0.12)' }}>
+              <div className="label" style={{ fontSize: 10, marginBottom: 6 }}>{k}</div>
+              <div style={{ fontFamily: "'Pretendard Variable'", fontSize: 13, color: '#1b1a15', whiteSpace: 'pre-line', lineHeight: 1.55 }}>{v}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── App ──
+function App() {
+  const [tweaks, setTweaks] = React.useState(TWEAKS);
+  const [tweaksOpen, setTweaksOpen] = React.useState(false);
+
+  React.useEffect(() => { applyTweaks(tweaks); }, [tweaks]);
+
+  // Tweaks host protocol
+  React.useEffect(() => {
+    const onMsg = (e) => {
+      const d = e.data;
+      if (!d || typeof d !== 'object') return;
+      if (d.type === '__activate_edit_mode') setTweaksOpen(true);
+      if (d.type === '__deactivate_edit_mode') setTweaksOpen(false);
+    };
+    const toggleTheme = () => {
+      setTweaks(prev => {
+        const next = { ...prev, theme: prev.theme === 'dark' ? 'paper' : 'dark' };
+        window.parent.postMessage({ type: '__edit_mode_set_keys', edits: next }, '*');
+        return next;
+      });
+    };
+    window.addEventListener('message', onMsg);
+    window.addEventListener('__writehabit_toggle_theme', toggleTheme);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => {
+      window.removeEventListener('message', onMsg);
+      window.removeEventListener('__writehabit_toggle_theme', toggleTheme);
+    };
+  }, []);
+
+  const handleChange = (next) => {
+    setTweaks(next);
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: next }, '*');
+  };
+
+  return (
+    <React.Fragment>
+      <DesignCanvas>
+        <DCSection id="desktop" title="Desktop · 데스크톱" subtitle="반응형 웹 메인 뷰들">
+          <DCArtboard id="feed"    label="01 · 메인 피드"       width={1280} height={1400}><FeedScreen /></DCArtboard>
+          <DCArtboard id="write"   label="02 · 글쓰기"          width={1280} height={1180}><WriteScreen /></DCArtboard>
+          <DCArtboard id="detail"  label="03 · 글 상세 + 댓글"  width={1280} height={1720}><DetailScreen /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="user" title="사용자 · User" subtitle="프로필 / 아카이브 / 로그인">
+          <DCArtboard id="profile" label="04 · 프로필 · 스트릭" width={1280} height={1260}><ProfileScreen /></DCArtboard>
+          <DCArtboard id="archive" label="05 · 키워드 아카이브" width={1280} height={1300}><ArchiveScreen /></DCArtboard>
+          <DCArtboard id="login"   label="06 · 로그인"          width={1280} height={820}><LoginScreen /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="mobile" title="Mobile · 모바일" subtitle="반응형 — iOS 프레임 기준">
+          <DCArtboard id="mfeed"   label="07 · 모바일 피드"     width={440} height={820}><MobileFeed /></DCArtboard>
+          <DCArtboard id="mwrite"  label="08 · 모바일 글쓰기"   width={440} height={820}><MobileWrite /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="admin" title="Admin · 큐레이션" subtitle="편집자 전용 — 키워드 스케줄러">
+          <DCArtboard id="curate"  label="09 · 키워드 큐레이션"  width={1280} height={1620}><AdminKeywordsScreen /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="backend" title="Backend · API" subtitle="Python / FastAPI 스펙">
+          <DCArtboard id="api"     label="10 · 서버 스펙"       width={1280} height={860}><BackendReadme /></DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+
+      {tweaksOpen && (
+        <TweaksPanel tweaks={tweaks} onChange={handleChange} onClose={() => setTweaksOpen(false)} />
+      )}
+    </React.Fragment>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+</body>
+</html>
